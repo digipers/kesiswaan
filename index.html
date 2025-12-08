@@ -1,0 +1,2440 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Aplikasi Pelanggaran Siswa — v2.3 (Mobile-Optimized)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <style>
+    :root{--brand:#0d6efd;--muted:#6c757d;--yellow-bg:#fff9c4}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:#f5f7fb; font-size: 0.9rem;}
+    .app{display:flex;min-height:100vh}
+    .sidebar{width:260px;background:var(--brand);color:#fff;flex-shrink:0;transition:transform .25s ease-in-out; position: fixed; z-index: 1050; height: 100vh;}
+    .sidebar .logo{height:72px;padding:16px;display:flex;align-items:center;gap:12px}
+    .sidebar .logo img{height:48px;width:48px;object-fit:cover;border-radius:6px;border:2px solid rgba(255,255,255,.15)}
+    .sidebar .menu{padding:8px 12px}
+    .sidebar .menu a{display:flex;justify-content:space-between;align-items:center;color:#fff;text-decoration:none;padding:8px;border-radius:6px}
+    .sidebar .menu a:hover{background:rgba(255,255,255,0.06)}
+    .sidebar .school-info{padding:12px;background:rgba(255,255,255,0.03);margin:8px;border-radius:8px}
+    .sidebar.collapsed{transform:translateX(-280px)}
+    .main{flex:1;padding:10px;}
+    .topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .hamburger{background:transparent;border:0;color:var(--brand);font-size:24px; cursor:pointer; padding: 5px;}
+    .card{box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom: 0.8rem;}
+    .logo-preview{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e6eefc}
+    .alert-area{position:fixed;right:10px;top:10px;z-index:2000;}
+    .letter-wrapper{background:white;border-radius:8px;padding:24px;min-height:780px}
+    #letterEditor{font-family:Times,serif;font-size:13pt;line-height:1.5;color:#111827}
+    .ql-toolbar{overflow-x:auto}
+    .search-dropdown{position:absolute;width:100%;max-height:200px;overflow-y:auto;background:white;border:1px solid #ced4da;border-top:none;border-radius:0 0 0.375rem 0.375rem;z-index:1000;box-shadow:0 4px 8px rgba(0,0,0,0.1)}
+    .search-dropdown .dropdown-item{padding:8px 12px;cursor:pointer; min-height: 44px;}
+    .search-dropdown .dropdown-item:hover{background-color:#f8f9fa}
+    .search-container{position:relative}
+    .search-dropdown .dropdown-footer {padding: 4px 12px; font-size: 0.8em; color: #6c757d; background-color: #f8f9fa; border-top: 1px solid #e9ecef;}
+    
+    .form-control, .form-select { background-color: var(--yellow-bg); }
+    
+    @media print {
+        .sidebar, .topbar, .btn, .no-print { display: none !important; }
+        .main { padding: 0; margin: 0; }
+        .card { box-shadow: none; border: none; }
+        body { background: white; color: black; }
+        table { page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+    }
+    
+    @media(max-width:768px) {
+        body { font-size: 0.85rem; }
+        .main { padding: 8px; }
+        .topbar h5 { font-size: 1rem; }
+        .card { padding: 0.75rem !important; }
+        .btn-group-sm .btn, .btn-sm { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+        .table-responsive { font-size: 0.8rem; }
+        .modal-dialog { margin: 0.5rem; }
+        input[type="file"], input[type="date"], select, .form-control { font-size: 16px; }
+        .card { margin-bottom: 0.5rem; }
+        .search-dropdown .dropdown-item { padding: 12px; }
+        .logo-preview, #schoolLogoSmall { width: 40px; height: 40px; }
+        .action-buttons { flex-wrap: wrap; }
+        .action-buttons .btn { margin-bottom: 0.5rem; }
+    }
+    
+    @media(min-width:992px) {
+        .sidebar { position: relative; height: auto; }
+        .main { margin-left: 0; }
+    }
+    
+    .action-buttons { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .section-divider { border-top: 1px solid #dee2e6; margin-top: 1.5rem; margin-bottom: 1rem; padding-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="alert-area" id="alertArea"></div>
+<div class="app">
+  <aside id="sidebar" class="sidebar collapsed">
+    <div class="logo">
+      <img id="schoolLogoSmall" src="" alt="logo" onerror="this.style.display='none'">
+      <div>
+        <div style="font-weight:700">Aplikasi Pelanggaran</div>
+        <div style="font-size:.85rem;opacity:.9">Sekolah</div>
+      </div>
+    </div>
+    <div style="padding:0 12px 8px 12px">
+      <div class="school-info" id="schoolInfo">
+        <div style="font-weight:600" id="si_name">Nama Sekolah</div>
+        <div style="font-size:.85rem;color:rgba(255,255,255,0.9)" id="si_address">Alamat sekolah</div>
+        <div style="font-size:.85rem;margin-top:6px">Kepala: <span id="si_kepala">-</span></div>
+        <div style="font-size:.85rem">Waka Kesiswaan: <span id="si_waka">-</span></div>
+      </div>
+    </div>
+    <nav class="menu">
+      <div class="section mb-2">
+        <a href="#" onclick="showPage('identitas')">Identitas Sekolah <span>›</span></a>
+        <a href="#" onclick="showPage('data_siswa')">Data Siswa <span>›</span></a>
+        <a href="#" onclick="showPage('pelanggaran')">Pelanggaran <span>›</span></a>
+        <a href="#" onclick="showPage('rekap_pelanggaran')">Rekap Pelanggaran <span>›</span></a>
+        <a href="#" onclick="showPage('laporan')">Laporan <span>›</span></a>
+        <a href="#" onclick="showPage('pengaturan')">Pengaturan <span>›</span></a>
+      </div>
+    </nav>
+    <div style="padding:12px;color:rgba(255,255,255,0.7);font-size:.82rem">di Buat By. ZASE</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button id="btnToggle" class="hamburger" title="Menu">☰</button>
+      <h5 class="mb-0" id="pageTitle">Identitas Sekolah</h5>
+      <div class="ms-auto small-muted">User: <span id="userBadge">Admin</span></div>
+    </div>
+
+    <!-- Pages -->
+    <div id="page_identitas" class="page">
+      <div class="card p-3 mb-3">
+        <h6>Identitas Sekolah</h6>
+        <div class="small-muted mb-2">Simpan identitas sekolah di sini. Logo menggunakan input file (capture tersedia di HP).</div>
+        <div class="row g-2">
+          <div class="col-md-6"><label class="form-label">Nama Sekolah</label><input id="si_input_name" class="form-control"></div>
+          <div class="col-md-6"><label class="form-label">Alamat</label><input id="si_input_address" class="form-control"></div>
+          <div class="col-md-6"><label class="form-label">Nama Kepala Sekolah</label><input id="si_input_kepala" class="form-control"></div>
+          <div class="col-md-6"><label class="form-label">Nama Waka Kesiswaan</label><input id="si_input_waka" class="form-control"></div>
+          <div class="col-12"><label class="form-label">Logo Sekolah (kamera/galeri)</label>
+            <div class="d-flex gap-2 align-items-center">
+              <label class="btn btn-sm btn-outline-light mb-0">Pilih Logo<input id="si_logo_input" type="file" accept="image/*" capture="environment" hidden onchange="previewLogo(event)"></label>
+              <img id="si_logo_preview" class="logo-preview" src="" alt="preview"/>
+              <button class="btn btn-sm btn-light" onclick="removeLogo()">Hapus Logo</button>
+            </div>
+          </div>
+          <div class="col-12 text-end mt-2"><button class="btn btn-primary" onclick="saveSchoolInfo()">Simpan Identitas</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="page_data_siswa" class="page d-none">
+      <div class="card p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h6 class="mb-0">Data Siswa</h6>
+            <div class="small-muted">Unggah / unduh Excel (.xlsx). Tambah manual, preview foto siswa. Foto di kolom Foto berisi base64 embedded.</div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-sm btn-success" onclick="downloadTemplateExcel()">Download Template</button>
+            <button class="btn btn-sm btn-outline-success" onclick="exportStudentsExcel()">Unduh Excel</button>
+            <label class="btn btn-sm btn-primary mb-0">Unggah Excel<input id="uploadXlsx" type="file" accept=".xlsx,.xls" hidden onchange="handleUploadXLSX(event)"></label>
+            <button class="btn btn-sm btn-outline-secondary" onclick="openAddStudent()">Tambah Siswa</button>
+          </div>
+        </div>
+        <div class="mb-2 d-flex gap-2">
+          <div class="search-container flex-grow-1">
+            <input id="searchStudent" class="form-control form-control-sm" placeholder="Cari siswa (nama / NIS)" oninput="renderStudentsTable()">
+            <div id="studentSearchDropdownTable" class="search-dropdown d-none"></div>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" onclick="clearStudentSearch()">Clear</button>
+        </div>
+        <div style="max-height:420px;overflow:auto"><table class="table table-sm table-hover" id="studentsTable"><thead class="table-light"><tr><th></th><th>NIS</th><th>Nama</th><th>Kelas</th><th>Orang Tua</th><th>Point</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="page_pelanggaran" class="page d-none">
+      <div class="card p-3 mb-3">
+        <h6>Pencatatan Pelanggaran</h6>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label">Cari / Pilih Siswa</label>
+            <div class="search-container">
+              <input id="viStudentSearch" class="form-control" placeholder="Ketik nama atau NIS" oninput="handleStudentSearchInput(event)">
+              <div id="studentSearchDropdown" class="search-dropdown d-none"></div>
+            </div>
+          </div>
+          <div class="col-md-6"><label class="form-label">Siswa Terpilih</label><input id="viStudentSelected" class="form-control" readonly placeholder="Belum ada siswa dipilih"></div>
+          <div class="col-md-6"><label class="form-label">Jenis Pelanggaran</label><select id="viType" class="form-select"></select></div>
+          <div class="col-md-3"><label class="form-label">Tanggal</label><input id="viDate" type="date" class="form-control"></div>
+          <div class="col-md-3"><label class="form-label">Point</label><input id="viPoints" class="form-control" readonly></div>
+          <div class="col-12"><label class="form-label">Keterangan (opsional)</label><input id="viNote" class="form-control" placeholder="Contoh: terjebak macet, bolos jam 1"></div>
+          <div class="col-12 text-end mt-2">
+            <button class="btn btn-primary" onclick="addViolation()">Catat Pelanggaran</button>
+            <button class="btn btn-success" onclick="printSemuaRiwayatPelanggaran()">Cetak Riwayat</button>
+          </div>
+        </div>
+      </div>
+      <div class="card p-3">
+        <h6>Riwayat Pelanggaran</h6>
+        <div style="max-height:320px;overflow:auto"><table class="table table-sm" id="violationsTable"><thead class="table-light"><tr><th>Tanggal</th><th>NIS</th><th>Nama</th><th>Kelas</th><th>Jenis</th><th>Point</th><th>Keterangan</th><th></th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="page_rekap_pelanggaran" class="page d-none">
+      <div class="card p-3 mb-3">
+        <h6>Rekap Data Pelanggaran</h6>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Pilih Jenis Laporan</label>
+            <select id="rekapType" class="form-select" onchange="handleRekapTypeChange()">
+              <option value="per-siswa">Per Siswa</option>
+              <option value="per-kelas">Per Kelas</option>
+              <option value="semua">Semua Pelanggaran</option>
+            </select>
+          </div>
+          
+          <div id="rekapSiswaContainer">
+            <div class="col-md-6">
+              <label class="form-label">Cari / Pilih Siswa</label>
+              <div class="search-container">
+                <input id="rekapSiswaSearch" class="form-control" placeholder="Ketik nama atau NIS" oninput="handleRekapSiswaSearchInput(event)">
+                <div id="rekapSiswaSearchDropdown" class="search-dropdown d-none"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 d-none" id="rekapKelasContainer">
+            <label class="form-label">Pilih Kelas</label>
+            <select id="rekapKelas" class="form-select">
+              <option value="">-- Pilih Kelas --</option>
+            </select>
+          </div>
+          
+          <div class="col-md-3 text-end">
+            <div class="action-buttons justify-content-end">
+              <button class="btn btn-primary" onclick="tampilkanRekap()">Tampilkan Rekap</button>
+              <button class="btn btn-success" onclick="cetakRekap()">Cetak Rekap</button>
+              <button class="btn btn-info" onclick="backupPDF()">Backup PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="rekapArea" class="card p-3">
+        <p class="text-muted">Pilih jenis laporan lalu klik <strong>Tampilkan Rekap</strong> untuk melihat data pelanggaran.</p>
+      </div>
+    </div>
+
+    <div id="page_laporan" class="page d-none">
+      <div class="card p-3 mb-3">
+        <h6>Laporan Tren Pelanggaran</h6>
+        <div class="small-muted mb-2">Analisis tren pelanggaran dari waktu ke waktu dengan grafik.</div>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Jenis Laporan</label>
+            <select id="laporanType" class="form-select" onchange="handleLaporanTypeChange()">
+              <option value="per-siswa">Per Siswa</option>
+              <option value="per-kelas">Per Kelas</option>
+              <option value="semua-kelas">Semua Kelas</option>
+            </select>
+          </div>
+          
+          <div id="laporanSiswaContainer">
+            <div class="col-md-3">
+              <label class="form-label">Pilih Siswa</label>
+              <div class="search-container">
+                <input id="laporanSiswaSearch" class="form-control" placeholder="Ketik nama atau NIS" oninput="handleLaporanSiswaSearchInput(event)">
+                <div id="laporanSiswaSearchDropdown" class="search-dropdown d-none"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 d-none" id="laporanKelasContainer">
+            <label class="form-label">Pilih Kelas</label>
+            <select id="laporanKelas" class="form-select">
+              <option value="">-- Pilih Kelas --</option>
+            </select>
+          </div>
+          
+          <div class="col-md-2">
+            <label class="form-label">Dari Bulan</label>
+            <select id="laporanDariBulan" class="form-select"></select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Dari Tahun</label>
+            <input type="number" id="laporanDariTahun" class="form-control" min="2020" max="2030">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Sampai Bulan</label>
+            <select id="laporanSampaiBulan" class="form-select"></select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Sampai Tahun</label>
+            <input type="number" id="laporanSampaiTahun" class="form-control" min="2020" max="2030">
+          </div>
+          
+          <div class="col-md-12 text-end mt-2">
+            <button class="btn btn-primary" onclick="tampilkanLaporanDanGrafik()">Tampilkan Laporan & Grafik</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card p-3">
+        <h6>Hasil Laporan Tren</h6>
+        <div style="height: 400px; position: relative;">
+          <canvas id="trendChart"></canvas>
+        </div>
+        <div class="mt-3" style="max-height: 300px; overflow: auto;">
+            <table class="table table-sm" id="laporanTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Bulan</th>
+                        <th>Jumlah Pelanggaran</th>
+                        <th>Total Poin</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+      </div>
+
+      <!-- FITUR BARU: LAPORAN RANKING -->
+      <div class="card p-3 mt-3">
+        <h6>Laporan Ranking Pelanggaran per Bulan</h6>
+        <div class="small-muted mb-2">Menampilkan ranking jenis pelanggaran terbanyak hingga terkecil untuk setiap bulan dalam periode yang dipilih.</div>
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="tampilkanLaporanRanking()">Tampilkan Ranking</button>
+            <button class="btn btn-info" onclick="backupRankingPDF()">Backup PDF (Ranking)</button>
+        </div>
+        
+        <div class="mt-3" style="max-height: 400px; overflow: auto;">
+            <table class="table table-sm" id="rankingTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Bulan</th>
+                        <th>Jenis Pelanggaran</th>
+                        <th>Jumlah Kasus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">Klik tombol "Tampilkan Ranking" untuk melihat data.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="page_pengaturan" class="page d-none">
+      <div class="card p-3 mb-3">
+        <h6>Pengaturan</h6>
+        <div class="small-muted mb-2">Pengaturan aplikasi sederhana (backup, restore, reset data).</div>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-success" onclick="exportJSON()">📥 Backup (JSON)</button>
+          <button class="btn btn-sm btn-outline-info" onclick="exportViolationsJSON()">📄 Backup Pelanggaran</button>
+          <label class="btn btn-sm btn-outline-secondary mb-0">🔗 Gabung JSON<input id="mergeViolationsInput" type="file" accept="application/json" multiple hidden onchange="mergeViolationsJSON(event)"></label>
+          <label class="btn btn-sm btn-outline-primary mb-0">📂 Restore JSON<input id="restoreJSON" type="file" accept="application/json" hidden onchange="handleImportJSON(event)"></label>
+          <button class="btn btn-sm btn-outline-danger" onclick="resetAll()">🗑️ Reset Semua Data</button>
+        </div>
+      </div>
+      
+      <div class="card p-3 mb-3">
+        <h6>Kelola Jenis Pelanggaran</h6>
+        <div class="small-muted mb-2">Tambah, edit, atau hapus jenis pelanggaran beserta poinnya.</div>
+        
+        <div class="mb-3">
+            <button class="btn btn-sm btn-primary" onclick="openAddViolationType()">+ Tambah Jenis Pelanggaran</button>
+        </div>
+        
+        <div style="max-height:300px;overflow:auto;">
+            <table class="table table-sm" id="violationTypesTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>No</th>
+                        <th>Jenis Pelanggaran</th>
+                        <th>Poin</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Student Modal -->
+<div class="modal fade" id="studentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Tambah / Edit Siswa</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <form id="studentForm">
+          <div class="row g-2">
+            <div class="col-md-4"><label class="form-label">NIS</label><input id="s_nis" class="form-control" required></div>
+            <div class="col-md-8"><label class="form-label">Nama Lengkap</label><input id="s_nama" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Kelas</label><input id="s_kelas" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label">Orang Tua / Wali</label><input id="s_ortu" class="form-control"></div>
+            <div class="col-12"><label class="form-label">Foto Siswa (kamera/galeri)</label>
+              <div class="d-flex gap-2 align-items-center"><label class="btn btn-sm btn-outline-secondary mb-0">Pilih Foto<input id="s_photo" type="file" accept="image/*" capture="environment" hidden onchange="previewStudentPhoto(event)"></label><img id="s_preview" class="logo-preview" src="" alt="preview" /><div class="small-muted">Gunakan `capture` agar HP membuka kamera.</div></div>
+            </div>
+          </div>
+          <input type="hidden" id="s_original_nis">
+        </form>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary" onclick="saveStudent()">Simpan</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Violation Type Modal -->
+<div class="modal fade" id="violationTypeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Tambah / Edit Jenis Pelanggaran</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="violationTypeForm">
+          <div class="mb-3">
+            <label class="form-label">Nama Jenis Pelanggaran</label>
+            <input id="vt_name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Poin</label>
+            <input id="vt_points" type="number" class="form-control" min="1" required>
+          </div>
+          <input type="hidden" id="vt_original_id">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary" onclick="saveViolationType()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// =============================================================================
+// 1. GLOBAL VARIABLES & DATA MODEL
+// =============================================================================
+let students = [
+  { nis: '0094789075', nama: 'ADI SAPUTRA', kelas: 'X (Sepuluh)', ortu: 'Slamet Wahyudi', photo: 'https://picsum.photos/seed/0094789075/40/40.jpg' },
+{ nis: '0096019190', nama: 'AULIA NUR LAELA', kelas: 'X (Sepuluh)', ortu: 'Narjo', photo: 'https://picsum.photos/seed/0096019190/40/40.jpg' },
+{ nis: '0107301719', nama: 'CIPA NADIA SALMA', kelas: 'X (Sepuluh)', ortu: 'Samsuri', photo: 'https://picsum.photos/seed/0107301719/40/40.jpg' },
+{ nis: '0088133836', nama: 'DEDI IRAWAN', kelas: 'X (Sepuluh)', ortu: 'Dwi junianto', photo: 'https://picsum.photos/seed/0088133836/40/40.jpg' },
+{ nis: '0097790486', nama: 'FAREL SAPUTERA', kelas: 'X (Sepuluh)', ortu: 'Wasidi', photo: 'https://picsum.photos/seed/0097790486/40/40.jpg' },
+{ nis: '0106097706', nama: 'ISMAWATI DWI ANGGRAINI', kelas: 'X (Sepuluh)', ortu: 'Taukhit', photo: 'https://picsum.photos/seed/0106097706/40/40.jpg' },
+{ nis: '0085852231', nama: 'IRFAN', kelas: 'X (Sepuluh)', ortu: 'SUKRI', photo: 'https://picsum.photos/seed/0085852231/40/40.jpg' },
+{ nis: '0092200897', nama: 'LUTHFI HAKIM', kelas: 'X (Sepuluh)', ortu: 'SUPARMAN', photo: 'https://picsum.photos/seed/0092200897/40/40.jpg' },
+{ nis: '0109081925', nama: 'M.ADITYA PRAYOGA', kelas: 'X (Sepuluh)', ortu: 'M.Marzuki', photo: 'https://picsum.photos/seed/0109081925/40/40.jpg' },
+{ nis: '0094433103', nama: 'M.AL IMRON', kelas: 'X (Sepuluh)', ortu: 'Imam Subari', photo: 'https://picsum.photos/seed/0094433103/40/40.jpg' },
+{ nis: '0097848607', nama: 'MOHAMAT HARIS SETIAWAN', kelas: 'X (Sepuluh)', ortu: 'TRIYONO', photo: 'https://picsum.photos/seed/0097848607/40/40.jpg' },
+{ nis: '0082735425', nama: 'MOHAMAD RIKI SAPUTRA', kelas: 'X (Sepuluh)', ortu: 'PONIDI', photo: 'https://picsum.photos/seed/0082735425/40/40.jpg' },
+{ nis: '0102522253', nama: 'RADITYA DANU PRATAMA', kelas: 'X (Sepuluh)', ortu: 'Gatot Suherman', photo: 'https://picsum.photos/seed/0102522253/40/40.jpg' },
+{ nis: '0102235604', nama: 'RIDHO FIRMANSYAH', kelas: 'X (Sepuluh)', ortu: 'SUNTORO', photo: 'https://picsum.photos/seed/0102235604/40/40.jpg' },
+{ nis: '0099798429', nama: 'RIZKI CAHYO SUGENG WIBOWO', kelas: 'X (Sepuluh)', ortu: 'MISIYO', photo: 'https://picsum.photos/seed/0099798429/40/40.jpg' },
+{ nis: '0000000000', nama: 'RIZAL ABDUL HAQ', kelas: 'X (Sepuluh)', ortu: 'Suhirno', photo: 'https://picsum.photos/seed/0000000000/40/40.jpg' },
+{ nis: '0106667835', nama: 'SAFA AULIA PUTRI', kelas: 'X (Sepuluh)', ortu: 'Jumidi', photo: 'https://picsum.photos/seed/0106667835/40/40.jpg' },
+{ nis: '0105199297', nama: 'SHINTA SASTYA WATI', kelas: 'X (Sepuluh)', ortu: 'Ah.Suyani', photo: 'https://picsum.photos/seed/0105199297/40/40.jpg' },
+{ nis: '3106050813', nama: 'TIYAS FARIDA SARI', kelas: 'X (Sepuluh)', ortu: 'Ah. Mutaqin', photo: 'https://picsum.photos/seed/3106050813/40/40.jpg' },
+{ nis: '0095977397', nama: 'FAIS DAROIN', kelas: 'X (Sepuluh)', ortu: '', photo: 'https://picsum.photos/seed/0095977397/40/40.jpg' },
+{ nis: '0095046784', nama: 'YULIA MUSLIMATUS SADIYAH', kelas: 'X (Sepuluh)', ortu: '', photo: 'https://picsum.photos/seed/0095046784/40/40.jpg' },
+
+{ nis: '0084903816', nama: 'Ahmad Iqbal', kelas: 'XI (Sebelas)', ortu: 'Paimin', photo: 'https://picsum.photos/seed/0084903816/40/40.jpg' },
+{ nis: '0088606301', nama: 'Ahmad Ramadhani', kelas: 'XI (Sebelas)', ortu: 'Slamet Wahyudi', photo: 'https://picsum.photos/seed/0088606301/40/40.jpg' },
+{ nis: '0000000000', nama: 'Argi Setiawan', kelas: 'XI (Sebelas)', ortu: 'Sukirno', photo: 'https://picsum.photos/seed/ArgiSetiawan/40/40.jpg' },
+{ nis: '0081098360', nama: 'Aisyah Lu\'lu\'ul Husna', kelas: 'XI (Sebelas)', ortu: 'Maryono', photo: 'https://picsum.photos/seed/0081098360/40/40.jpg' },
+{ nis: '0095627591', nama: 'Anggun Puspita Anggraini', kelas: 'XI (Sebelas)', ortu: 'Sariyono', photo: 'https://picsum.photos/seed/0095627591/40/40.jpg' },
+{ nis: '0089314202', nama: 'Dafa', kelas: 'XI (Sebelas)', ortu: 'Sudarmaji', photo: 'https://picsum.photos/seed/0089314202/40/40.jpg' },
+{ nis: '0091007309', nama: 'Devita Anjani', kelas: 'XI (Sebelas)', ortu: 'Budi Wahyono', photo: 'https://picsum.photos/seed/0091007309/40/40.jpg' },
+{ nis: '0000000000', nama: 'Ferdi Kurniawan', kelas: 'XI (Sebelas)', ortu: 'Mukani', photo: 'https://picsum.photos/seed/FerdiKurniawan/40/40.jpg' },
+{ nis: '0000000000', nama: 'Fitra Afriza', kelas: 'XI (Sebelas)', ortu: 'Wasito', photo: 'https://picsum.photos/seed/FitraAfriza/40/40.jpg' },
+{ nis: '0084423897', nama: 'Indah Kasturi Kusuma Putri', kelas: 'XI (Sebelas)', ortu: 'Ahmad Sabidin', photo: 'https://picsum.photos/seed/0084423897/40/40.jpg' },
+{ nis: '0098669866', nama: 'Lefiyana Juwita', kelas: 'XI (Sebelas)', ortu: 'Ponirin', photo: 'https://picsum.photos/seed/0098669866/40/40.jpg' },
+{ nis: '0085606025', nama: 'Marchfel Firdiyansah', kelas: 'XI (Sebelas)', ortu: 'Supriyadi', photo: 'https://picsum.photos/seed/0085606025/40/40.jpg' },
+{ nis: '0089725108', nama: 'Melinda Kusuma Dewi', kelas: 'XI (Sebelas)', ortu: 'Zaenuddin', photo: 'https://picsum.photos/seed/0089725108/40/40.jpg' },
+{ nis: '0092585298', nama: 'M.Yudha Rizki Iftori', kelas: 'XI (Sebelas)', ortu: 'Candra Gunawan', photo: 'https://picsum.photos/seed/0092585298/40/40.jpg' },
+{ nis: '0074048074', nama: 'Mohamad Ibnu Rosid', kelas: 'XI (Sebelas)', ortu: 'Parman', photo: 'https://picsum.photos/seed/0074048074/40/40.jpg'},
+{ nis: '0083168310', nama: 'M.Bisma Mega Nanda', kelas: 'XI (Sebelas)', ortu: 'Suratman', photo: 'https://picsum.photos/seed/0083168310/40/40.jpg' },
+{ nis: '0095212808', nama: 'M.Rizki Ramadhani', kelas: 'XI (Sebelas)', ortu: 'Syamsuri', photo: 'https://picsum.photos/seed/0095212808/40/40.jpg' },
+{ nis: '0000000000', nama: 'M.Fiki Darmawan', kelas: 'XI (Sebelas)', ortu: 'Basar', photo: 'https://picsum.photos/seed/MFikiDarmawan/40/40.jpg' },
+{ nis: '3095650322', nama: 'M.Badru Muwafaq', kelas: 'XI (Sebelas)', ortu: 'M.Idris', photo: 'https://picsum.photos/seed/3095650322/40/40.jpg' },
+{ nis: '0095475420', nama: 'Rima', kelas: 'XI (Sebelas)', ortu: 'Basuki', photo: 'https://picsum.photos/seed/0095475420/40/40.jpg' },
+{ nis: '0095395423', nama: 'Rima Ulvania', kelas: 'XI (Sebelas)', ortu: 'Ahmad Darmadi', photo: 'https://picsum.photos/seed/0095395423/40/40.jpg' },
+{ nis: '0091673355', nama: 'Riski Munandar', kelas: 'XI (Sebelas)', ortu: 'Sehono', photo: 'https://picsum.photos/seed/0091673355/40/40.jpg' },
+{ nis: '0064036686', nama: 'Siti Miftakhul Makmuroh', kelas: 'XI (Sebelas)', ortu: 'Nur Ngali', photo: 'https://picsum.photos/seed/0064036686/40/40.jpg' },
+{ nis: '0091403540', nama: 'Tomi Jadmiko', kelas: 'XI (Sebelas)', ortu: 'Tentrem Sutejo', photo: 'https://picsum.photos/seed/0091403540/40/40.jpg' },
+{ nis: '0086855084', nama: 'Tia Dwi Saputri', kelas: 'XI (Sebelas)', ortu: 'Sudarno', photo: 'https://picsum.photos/seed/0086855084/40/40.jpg' },
+{ nis: '0000000000', nama: 'Wafiq Khariri', kelas: 'XI (Sebelas)', ortu: 'M.Sholikin', photo: 'https://picsum.photos/seed/WafiqKhariri/40/40.jpg' },
+{ nis: '0095475420', nama: 'Yeni Winarni', kelas: 'XI (Sebelas)', ortu: 'Hermawan', photo: 'https://picsum.photos/seed/0095475420/40/40.jpg' },
+{ nis: '0000000000', nama: 'Ainun Nadhiroh', kelas: 'XI (Sebelas)', ortu: 'Ahmad Sukirno', photo: 'https://picsum.photos/seed/AinunNadhiroh/40/40.jpg' },
+{ nis: '0098781514', nama: 'Habibatus Zakia', kelas: 'XI (Sebelas)', ortu: 'Mastur Supriyanto', photo: 'https://picsum.photos/seed/0098781514/40/40.jpg' },
+{ nis: '3096763981', nama: 'Dwi Fatimah', kelas: 'XI (Sebelas)', ortu: 'Sugiarto', photo: 'https://picsum.photos/seed/3096763981/40/40.jpg' },
+{ nis: '3085136071', nama: 'M.Akbar Panjalu', kelas: 'XI (Sebelas)', ortu: 'Imam Mashuri', photo: 'https://picsum.photos/seed/3085136071/40/40.jpg' },
+{ nis: '0000000000', nama: 'Angga Dwi Saputra', kelas: 'XI (Sebelas)', ortu: 'Muhlasin', photo: 'https://picsum.photos/seed/AnggaDwiSaputra/40/40.jpg' },
+
+{ nis: '0077667204', nama: 'Ahmad Maulana', kelas: 'XII (dua Belas)', ortu: 'Wagiman', photo: 'https://picsum.photos/seed/0077667204/40/40.jpg' },
+{ nis: '0085214724', nama: 'Aliya Ayu Marlina', kelas: 'XII (dua Belas)', ortu: 'Kasiman', photo: 'https://picsum.photos/seed/0085214724/40/40.jpg' },
+{ nis: '0087149069', nama: 'Aprilia Winanti', kelas: 'XII (dua Belas)', ortu: 'Winarno', photo: 'https://picsum.photos/seed/0087149069/40/40.jpg' },
+{ nis: '0082699089', nama: 'Bagas Setiawan', kelas: 'XII (dua Belas)', ortu: 'Supriyatin', photo: 'https://picsum.photos/seed/0082699089/40/40.jpg' },
+{ nis: '0068818482', nama: 'Bagus Akbar Rani', kelas: 'XII (dua Belas)', ortu: 'Surani', photo: 'https://picsum.photos/seed/0068818482/40/40.jpg' },
+{ nis: '0088041522', nama: 'Binti Lutfiyah Zakiyah', kelas: 'XII (dua Belas)', ortu: 'Suratmin', photo: 'https://picsum.photos/seed/0088041522/40/40.jpg' },
+{ nis: '0087100213', nama: 'Cantika Dwi Jayanti', kelas: 'XII (dua Belas)', ortu: 'Pramono Ahmad Zaini', photo: 'https://picsum.photos/seed/0087100213/40/40.jpg' },
+{ nis: '0073724648', nama: 'Dennis Prasetiyo', kelas: 'XII (dua Belas)', ortu: 'Mustaji Untoro', photo: 'https://picsum.photos/seed/0073724648/40/40.jpg' },
+{ nis: '0073965350', nama: 'Disky Ramadani', kelas: 'XII (dua Belas)', ortu: 'M.Zahidin', photo: 'https://picsum.photos/seed/0073965350/40/40.jpg' },
+{ nis: '0072676706', nama: 'Ega Saputra', kelas: 'XII (dua Belas)', ortu: 'Sugiyono', photo: 'https://picsum.photos/seed/0072676706/40/40.jpg' },
+{ nis: '0085103057', nama: 'Eka Putri Febriani', kelas: 'XII (dua Belas)', ortu: 'Jamroji', photo: 'https://picsum.photos/seed/0085103057/40/40.jpg' },
+{ nis: '0083708627', nama: 'Endra Saputra', kelas: 'XII (dua Belas)', ortu: 'Darwanto', photo: 'https://picsum.photos/seed/0083708627/40/40.jpg' },
+{ nis: '0081159769', nama: 'Farid Ahmad Faisal', kelas: 'XII (dua Belas)', ortu: 'Sutarmin', photo: 'https://picsum.photos/seed/0081159769/40/40.jpg' },
+{ nis: '0084757704', nama: 'Maulana Dava', kelas: 'XII (dua Belas)', ortu: 'Muh Makruf', photo: 'https://picsum.photos/seed/0084757704/40/40.jpg' },
+{ nis: '0000000000', nama: 'Maya Safitri', kelas: 'XII (dua Belas)', ortu: 'Paiman', photo: 'https://picsum.photos/seed/MayaSafitri/40/40.jpg' },
+{ nis: '0077167251', nama: 'Miranti', kelas: 'XII (dua Belas)', ortu: 'Sunardi', photo: 'https://picsum.photos/seed/0077167251/40/40.jpg' },
+{ nis: '0072775329', nama: 'Muhammad Aldino Ama Rasya', kelas: 'XII (dua Belas)', ortu: 'Tarmidi', photo: 'https://picsum.photos/seed/0072775329/40/40.jpg' },
+{ nis: '0082727230', nama: 'Muhammad Ahya', kelas: 'XII (dua Belas)', ortu: 'Nurwadi', photo: 'https://picsum.photos/seed/0082727230/40/40.jpg' },
+{ nis: '0081846871', nama: 'Mohamad Dendi Firmanto', kelas: 'XII (dua Belas)', ortu: 'Sumarni', photo: 'https://picsum.photos/seed/0081846871/40/40.jpg' },
+{ nis: '0084244287', nama: 'Muhamad Misbahul Munir', kelas: 'XII (dua Belas)', ortu: 'M.Darmo', photo: 'https://picsum.photos/seed/0084244287/40/40.jpg' },
+{ nis: '0089726548', nama: 'Muhammad Rejaki', kelas: 'XII (dua Belas)', ortu: 'Ahmad Ribud', photo: 'https://picsum.photos/seed/0089726548/40/40.jpg' },
+{ nis: '0077347477', nama: 'Mohammad Sulton Al-azhar', kelas: 'XII (dua Belas)', ortu: 'Sayudi', photo: 'https://picsum.photos/seed/0077347477/40/40.jpg' },
+{ nis: '0085214724', nama: 'Nanda Ayu Ningsih', kelas: 'XII (dua Belas)', ortu: 'Kusnan', photo: 'https://picsum.photos/seed/0085214724/40/40.jpg' },
+{ nis: '0000000000', nama: 'Nayla Amin', kelas: 'XII (dua Belas)', ortu: 'Sumarni', photo: 'https://picsum.photos/seed/NaylaAmin/40/40.jpg' },
+{ nis: '0071174694', nama: 'Rahma Wulandari', kelas: 'XII (dua Belas)', ortu: 'Maryono', photo: 'https://picsum.photos/seed/0071174694/40/40.jpg' },
+{ nis: '0084479963', nama: 'Rendi Hidayat', kelas: 'XII (dua Belas)', ortu: 'Yarkoni', photo: 'https://picsum.photos/seed/0084479963/40/40.jpg' },
+{ nis: '0088343077', nama: 'Sahal Wahyudin', kelas: 'XII (dua Belas)', ortu: 'Suhadak', photo: 'https://picsum.photos/seed/0088343077/40/40.jpg' },
+{ nis: '0000000000', nama: 'Shera Aurelia Sariana', kelas: 'XII (dua Belas)', ortu: 'Muhamat Nurkholiq', photo: 'https://picsum.photos/seed/SheraAurelia/40/40.jpg' },
+{ nis: '0070226573', nama: 'Sulamanul Jamal', kelas: 'XII (dua Belas)', ortu: 'Untung Chasbulloh', photo: 'https://picsum.photos/seed/0070226573/40/40.jpg' },
+{ nis: '0075282696', nama: 'Tiara Saputri', kelas: 'XII (dua Belas)', ortu: 'Samukri', photo: 'https://picsum.photos/seed/0075282696/40/40.jpg' },
+{ nis: '0084034253', nama: 'Wahyuni Naila Ngilma', kelas: 'XII (dua Belas)', ortu: 'Sarengat', photo: 'https://picsum.photos/seed/0084034253/40/40.jpg' },
+{ nis: '0087602782', nama: 'Laura Meliyana Dewi', kelas: 'XII (dua Belas)', ortu: 'Muhamat Asngadi', photo: 'https://picsum.photos/seed/0087602782/40/40.jpg' },
+{ nis: '0000000000', nama: 'EKO NUZULUL MISBAH', kelas: 'XII (dua Belas)', ortu: '', photo: 'https://picsum.photos/seed/EkoNuzulul/40/40.jpg' },
+{ nis: '0000000000', nama: 'MUHAMAD KHOIRUR ROZIKIN', kelas: 'XII (dua Belas)', ortu: '', photo: 'https://picsum.photos/seed/MuhamadKhoirurRozikin/40/40.jpg' },
+];
+let violationTypes = [ 
+    {id:1,name:'Terlambat',points:5}, 
+    {id:2,name:'Tidak Pakai Seragam',points:10}, 
+    {id:3,name:'Bolos',points:20}, 
+    {id:4,name:'Bullying',points:30},
+    {id:5,name:'Tidak ikut upacara',points:15},
+    {id:6,name:'Tidak Ikut sholat berjamaah',points:20},
+    {id:7,name:'Merokok dilingkungan sekolah',points:15},
+    {id:8,name:'Tidak Ikut Kegiatan Sekolah',points:10},
+    {id:9,name:'Berkelahi sesama teman sekolah',points:20}
+];
+let violations = [
+    {id:1,studentNis:'0094789075',studentName:'ADI SAPUTRA',studentClass:'X (Sepuluh)',typeId:1,typeName:'Terlambat',points:5,date:'2024-02-05',note:'Terlambat 15 menit'},
+    {id:2,studentNis:'0096019190',studentName:'AULIA NUR LAELA',studentClass:'X (Sepuluh)',typeId:2,typeName:'Tidak Pakai Seragam',points:10,date:'2024-02-10',note:'Tidak pakai atribut'},
+    {id:3,studentNis:'0084903816',studentName:'Ahmad Iqbal',studentClass:'XI (Sebelas)',typeId:3,typeName:'Bolos',points:20,date:'2024-02-15',note:'Bolos jam pertama'},
+    {id:4,studentNis:'0077667204',studentName:'Ahmad Maulana',studentClass:'XII (dua Belas)',typeId:1,typeName:'Terlambat',points:5,date:'2024-01-20',note:'Terlambat 10 menit'},
+    {id:5,studentNis:'0094789075',studentName:'ADI SAPUTRA',studentClass:'X (Sepuluh)',typeId:4,typeName:'Bullying',points:30,date:'2024-03-01',note:'Mengganggu teman'},
+];
+let nextTypeId = 10;
+let nextViolationId = 6;
+let selectedStudentForViolation = null;
+let selectedStudentForRekap = null;
+let selectedStudentForLaporan = null;
+let trendChartInstance = null;
+
+// =============================================================================
+// 3. UTILITY FUNCTIONS
+// =============================================================================
+function showAlert(message, type='success', timeout=3500){
+    const area=document.getElementById('alertArea');
+    const id='a'+Date.now();
+    const div=document.createElement('div');
+    div.id=id;
+    div.className=`alert alert-${type} shadow-sm`;
+    div.style.minWidth='220px';
+    div.innerHTML=message;
+    area.appendChild(div);
+    if(timeout>0) setTimeout(()=>{ const el=document.getElementById(id); if(el) el.remove(); }, timeout);
+}
+
+function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID');
+}
+
+function getStudentProperty(student, property) {
+    const possibleNames = [property, property.toLowerCase(), property.toUpperCase()];
+    for (const name of possibleNames) {
+        if (student.hasOwnProperty(name) && student[name]) {
+            return student[name];
+        }
+    }
+    return '-';
+}
+
+// =============================================================================
+// 4. UI & NAVIGATION
+// =============================================================================
+const sidebar = document.getElementById('sidebar');
+document.getElementById('btnToggle').addEventListener('click', ()=> sidebar.classList.toggle('collapsed'));
+
+function showPage(key){
+    document.querySelectorAll('.page').forEach(p=>p.classList.add('d-none'));
+    const target = document.getElementById('page_'+key);
+    if (target) target.classList.remove('d-none');
+    const titles = {
+        identitas: 'Identitas Sekolah',
+        data_siswa: 'Data Siswa',
+        pelanggaran: 'Pencatatan Pelanggaran',
+        rekap_pelanggaran: 'Rekap Pelanggaran',
+        laporan: 'Laporan Tren Pelanggaran',
+        pengaturan: 'Pengaturan'
+    };
+    document.getElementById('pageTitle').textContent = titles[key] || 'Aplikasi';
+    if(window.innerWidth < 992) {
+        sidebar.classList.add('collapsed');
+    }
+
+    if (key === 'data_siswa') {
+        renderStudentsTable();
+    } else if (key === 'pelanggaran') {
+        renderViolationsTable();
+        populateViolationTypes();
+        document.getElementById('viDate').value = new Date().toISOString().split('T')[0];
+    } else if (key === 'rekap_pelanggaran') {
+        populateClassDropdown();
+    } 
+    else if (key === 'laporan') {
+        initializeLaporanPage();
+    }
+    else if (key === 'pengaturan') {
+        setTimeout(addPasteBackupButton, 100);
+        renderViolationTypesTable();
+    }
+}
+
+// =============================================================================
+// 5. SCHOOL IDENTITY MANAGEMENT
+// =============================================================================
+function loadSchoolInfo(){
+    const info = JSON.parse(localStorage.getItem('school_info')||'{}');
+    document.getElementById('si_input_name').value=info.name||'SMK Negeri 1 Jakarta';
+    document.getElementById('si_input_address').value=info.address||'Jl. Pendidikan No. 1, Jakarta Pusat';
+    document.getElementById('si_input_kepala').value=info.kepala||'Dr. Bambang Suryanto, M.Pd';
+    document.getElementById('si_input_waka').value=info.waka||'Susanti, S.Pd';
+    document.getElementById('si_logo_preview').src=info.logo||'';
+    document.getElementById('schoolLogoSmall').src=info.logo||'';
+    document.getElementById('si_name').textContent=info.name||'SMK Negeri 1 Jakarta';
+    document.getElementById('si_address').textContent=info.address||'Jl. Pendidikan No. 1, Jakarta Pusat';
+    document.getElementById('si_kepala').textContent=info.kepala||'Dr. Bambang Suryanto, M.Pd';
+    document.getElementById('si_waka').textContent=info.waka||'Susanti, S.Pd';
+}
+
+function saveSchoolInfo(){
+    const info = {
+        name: document.getElementById('si_input_name').value,
+        address: document.getElementById('si_input_address').value,
+        kepala: document.getElementById('si_input_kepala').value,
+        waka: document.getElementById('si_input_waka').value,
+        logo: document.getElementById('si_logo_preview').dataset.newlogo || document.getElementById('si_logo_preview').src
+    };
+    localStorage.setItem('school_info', JSON.stringify(info));
+    loadSchoolInfo();
+    showAlert('Identitas sekolah berhasil disimpan!');
+}
+
+function previewLogo(e){
+    const f=e.target.files[0];
+    if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+        document.getElementById('si_logo_preview').src=r.result;
+        document.getElementById('schoolLogoSmall').src=r.result;
+        document.getElementById('si_logo_preview').dataset.newlogo=r.result;
+    };
+    r.readAsDataURL(f);
+}
+
+function removeLogo(){
+    document.getElementById('si_logo_preview').src='';
+    document.getElementById('schoolLogoSmall').src='';
+    document.getElementById('si_logo_preview').dataset.newlogo='';
+    document.getElementById('si_logo_input').value='';
+}
+
+// =============================================================================
+// 6. STUDENT MANAGEMENT
+// =============================================================================
+function loadStudents(){
+    const data = localStorage.getItem('students');
+    if (data) {
+        students = JSON.parse(data);
+    } else {
+        saveStudents();
+    }
+}
+
+function saveStudents(){
+    localStorage.setItem('students', JSON.stringify(students));
+}
+
+function fixStudentData() {
+    let fixed = 0;
+    students.forEach(student => {
+        if (!student.ortu) {
+            if (student.OrangTua) {
+                student.ortu = student.OrangTua;
+                delete student.OrangTua;
+                fixed++;
+            } else if (student['Orang Tua']) {
+                student.ortu = student['Orang Tua'];
+                delete student['Orang Tua'];
+                fixed++;
+            }
+        }
+    });
+    
+    if (fixed > 0) {
+        saveStudents();
+        console.log(`Data ${fixed} siswa telah diperbaiki!`);
+    }
+}
+
+function renderStudentsTable(){
+    const tbody = document.querySelector('#studentsTable tbody');
+    const searchTerm = document.getElementById('searchStudent').value.toLowerCase().trim();
+    
+    tbody.innerHTML = '';
+    
+    const filteredStudents = students.filter(s => 
+        s.nama?.toLowerCase().includes(searchTerm) || 
+        s.nis?.toLowerCase().includes(searchTerm)
+    );
+    
+    filteredStudents.forEach(student => {
+        const totalPoints = violations
+            .filter(v => v.studentNis === student.nis)
+            .reduce((sum, v) => sum + v.points, 0);
+            
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><img src="${student.photo || 'https://picsum.photos/seed/' + student.nis + '/40/40.jpg'}" width="30" height="30" style="object-fit:cover;border-radius:4px"></td>
+            <td>${escapeHtml(student.nis)}</td>
+            <td>${escapeHtml(student.nama)}</td>
+            <td>${escapeHtml(student.kelas || '-')}</td>
+            <td>${escapeHtml(getStudentProperty(student, 'ortu'))}</td>
+            <td><span class="badge bg-${totalPoints > 20 ? 'danger' : totalPoints > 10 ? 'warning' : 'success'}">${totalPoints}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="editStudent('${student.nis}')">Edit</button>
+                    <button class="btn btn-outline-danger" onclick="deleteStudent('${student.nis}')">Hapus</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    if (searchTerm && filteredStudents.length > 0) {
+        showStudentSearchDropdownTable(filteredStudents, searchTerm);
+    } else {
+        document.getElementById('studentSearchDropdownTable').classList.add('d-none');
+    }
+}
+
+function showStudentSearchDropdownTable(filteredStudents, searchTerm) {
+    const dropdown = document.getElementById('studentSearchDropdownTable');
+    dropdown.innerHTML = '';
+    
+    const maxResults = 5;
+    const limitedResults = filteredStudents.slice(0, maxResults);
+    
+    limitedResults.forEach(student => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        item.innerHTML = `<strong>${escapeHtml(student.nis)}</strong> - ${escapeHtml(student.nama)} - ${escapeHtml(student.kelas || '-')}`;
+        item.onclick = () => {
+            document.getElementById('searchStudent').value = student.nama;
+            renderStudentsTable();
+        };
+        dropdown.appendChild(item);
+    });
+    
+    if (filteredStudents.length > maxResults) {
+        const footer = document.createElement('div');
+        footer.className = 'dropdown-footer';
+        footer.textContent = `Menampilkan ${maxResults} dari ${filteredStudents.length} hasil`;
+        dropdown.appendChild(footer);
+    }
+    
+    dropdown.classList.remove('d-none');
+}
+
+function clearStudentSearch() {
+    document.getElementById('searchStudent').value = '';
+    renderStudentsTable();
+}
+
+function openAddStudent(){
+    document.getElementById('s_original_nis').value = '';
+    document.getElementById('s_nis').value = '';
+    document.getElementById('s_nama').value = '';
+    document.getElementById('s_kelas').value = '';
+    document.getElementById('s_ortu').value = '';
+    document.getElementById('s_preview').src = '';
+    document.getElementById('s_photo').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('studentModal'));
+    modal.show();
+}
+
+function editStudent(nis){
+    const student = students.find(s => s.nis === nis);
+    if (!student) return;
+    
+    document.getElementById('s_original_nis').value = student.nis;
+    document.getElementById('s_nis').value = student.nis;
+    document.getElementById('s_nama').value = student.nama;
+    document.getElementById('s_kelas').value = student.kelas || '';
+    document.getElementById('s_ortu').value = getStudentProperty(student, 'ortu');
+    document.getElementById('s_preview').src = student.photo || '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('studentModal'));
+    modal.show();
+}
+
+function saveStudent(){
+    const originalNis = document.getElementById('s_original_nis').value;
+    const nis = document.getElementById('s_nis').value.trim();
+    const nama = document.getElementById('s_nama').value.trim();
+    const kelas = document.getElementById('s_kelas').value.trim();
+    const ortu = document.getElementById('s_ortu').value.trim();
+    const photo = document.getElementById('s_preview').src;
+    
+    if (!nis || !nama) {
+        showAlert('NIS dan nama harus diisi!', 'danger');
+        return;
+    }
+    
+    if (originalNis) {
+        const index = students.findIndex(s => s.nis === originalNis);
+        if (index !== -1) {
+            if (nis !== originalNis) {
+                violations.forEach(v => {
+                    if (v.studentNis === originalNis) {
+                        v.studentNis = nis;
+                    }
+                });
+                saveViolations();
+            }
+            students[index] = { nis, nama, kelas, ortu, photo };
+        }
+    } else {
+        if (students.find(s => s.nis === nis)) {
+            showAlert('NIS sudah ada!', 'danger');
+            return;
+        }
+        students.push({ nis, nama, kelas, ortu, photo });
+    }
+    
+    saveStudents();
+    renderStudentsTable();
+    bootstrap.Modal.getInstance(document.getElementById('studentModal')).hide();
+    showAlert(originalNis ? 'Data siswa berhasil diperbarui!' : 'Siswa berhasil ditambahkan!');
+}
+
+function deleteStudent(nis){
+    if (!confirm('Apakah Anda yakin ingin menghapus data siswa ini?')) return;
+    
+    students = students.filter(s => s.nis !== nis);
+    violations = violations.filter(v => v.studentNis !== nis);
+    
+    saveStudents();
+    saveViolations();
+    renderStudentsTable();
+    showAlert('Data siswa berhasil dihapus!');
+}
+
+function previewStudentPhoto(e){
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        document.getElementById('s_preview').src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function downloadTemplateExcel(){
+    const ws = XLSX.utils.json_to_sheet([
+        { NIS: '12345', Nama: 'Contoh Siswa', Kelas: 'X-A', OrangTua: 'Nama Orang Tua', Foto: '' }
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template Siswa");
+    XLSX.writeFile(wb, "template_siswa.xlsx");
+}
+
+function exportStudentsExcel(){
+    try {
+        const data = students.map(s => ({
+            NIS: s.nis,
+            Nama: s.nama,
+            Kelas: s.kelas || '',
+            OrangTua: getStudentProperty(s, 'ortu'),
+            Foto: s.photo || ''
+        }));
+        
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Data Siswa");
+        XLSX.writeFile(wb, "data_siswa.xlsx");
+        showAlert('Data siswa berhasil diekspor ke Excel!', 'success');
+    } catch (error) {
+        console.error("Export error:", error);
+        showAlert('Gagal mengekspor data ke Excel. Silakan coba lagi.', 'danger');
+    }
+}
+
+function handleUploadXLSX(event){
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    showAlert('Sedang memproses file Excel...', 'info', 10000);
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+            
+            let added = 0, skipped = 0, invalid = 0;
+
+            jsonData.forEach(row => {
+                if (row.NIS && row.Nama) {
+                    if (!students.find(s => s.nis === row.NIS)) {
+                        students.push({
+                            nis: row.NIS,
+                            nama: row.Nama,
+                            kelas: row.Kelas || row.kelas || '',
+                            ortu: row.ortu || row.OrangTua || row['Orang Tua'] || '',
+                            photo: row.Foto || row.photo || ''
+                        });
+                        added++;
+                    } else {
+                        skipped++;
+                    }
+                } else {
+                    invalid++;
+                }
+            });
+            
+            saveStudents();
+            renderStudentsTable();
+            
+            let message = `Proses impor selesai.<br>`;
+            message += `<strong>Berhasil ditambahkan:</strong> ${added} siswa.<br>`;
+            if(skipped > 0) message += `<strong>Dilewati (duplikat NIS):</strong> ${skipped} siswa.<br>`;
+            if(invalid > 0) message += `<strong>Data tidak valid (kosong):</strong> ${invalid} baris.`;
+            
+            showAlert(message, added > 0 ? 'success' : 'warning', 6000);
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            showAlert('Error membaca file Excel. Pastikan format file benar dan tidak rusak.', 'danger');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+    event.target.value = '';
+}
+
+// =============================================================================
+// 7. VIOLATION MANAGEMENT
+// =============================================================================
+function loadViolations(){
+    const data = localStorage.getItem('violations');
+    if (data) {
+        violations = JSON.parse(data);
+        if (violations.length > 0) {
+            nextViolationId = Math.max(...violations.map(v => v.id || 0)) + 1;
+        }
+    } else {
+        saveViolations();
+    }
+}
+
+function saveViolations(){
+    localStorage.setItem('violations', JSON.stringify(violations));
+}
+
+// =============================================================================
+// 7.1 VIOLATION TYPES MANAGEMENT
+// =============================================================================
+function loadViolationTypes(){
+    const data = localStorage.getItem('violation_types');
+    if (data) {
+        violationTypes = JSON.parse(data);
+        nextTypeId = Math.max(...violationTypes.map(t => t.id), 0) + 1;
+    } else {
+        saveViolationTypes();
+    }
+}
+
+function saveViolationTypes(){
+    localStorage.setItem('violation_types', JSON.stringify(violationTypes));
+}
+
+function renderViolationTypesTable(){
+    const tbody = document.querySelector('#violationTypesTable tbody');
+    tbody.innerHTML = '';
+    
+    violationTypes.forEach((type, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${escapeHtml(type.name)}</td>
+            <td><span class="badge bg-${type.points > 20 ? 'danger' : type.points > 10 ? 'warning' : 'info'}">${type.points}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="editViolationType(${type.id})">Edit</button>
+                    <button class="btn btn-outline-danger" onclick="deleteViolationType(${type.id})">Hapus</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function openAddViolationType(){
+    document.getElementById('vt_original_id').value = '';
+    document.getElementById('vt_name').value = '';
+    document.getElementById('vt_points').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('violationTypeModal'));
+    modal.show();
+}
+
+function editViolationType(id){
+    const type = violationTypes.find(t => t.id === id);
+    if (!type) return;
+    
+    document.getElementById('vt_original_id').value = type.id;
+    document.getElementById('vt_name').value = type.name;
+    document.getElementById('vt_points').value = type.points;
+    
+    const modal = new bootstrap.Modal(document.getElementById('violationTypeModal'));
+    modal.show();
+}
+
+function saveViolationType(){
+    const originalId = parseInt(document.getElementById('vt_original_id').value);
+    const name = document.getElementById('vt_name').value.trim();
+    const points = parseInt(document.getElementById('vt_points').value);
+    
+    if (!name || !points || points < 1) {
+        showAlert('Nama dan poin harus diisi dengan benar!', 'danger');
+        return;
+    }
+    
+    if (originalId) {
+        const index = violationTypes.findIndex(t => t.id === originalId);
+        if (index !== -1) {
+            violationTypes[index] = { id: originalId, name, points };
+            violations.forEach(v => {
+                if (v.typeId === originalId) {
+                    v.typeName = name;
+                    v.points = points;
+                }
+            });
+            saveViolations();
+        }
+    } else {
+        if (violationTypes.find(t => t.name.toLowerCase() === name.toLowerCase())) {
+            showAlert('Jenis pelanggaran dengan nama tersebut sudah ada!', 'danger');
+            return;
+        }
+        violationTypes.push({ id: nextTypeId++, name, points });
+    }
+    
+    saveViolationTypes();
+    renderViolationTypesTable();
+    populateViolationTypes();
+    bootstrap.Modal.getInstance(document.getElementById('violationTypeModal')).hide();
+    showAlert(originalId ? 'Jenis pelanggaran berhasil diperbarui!' : 'Jenis pelanggaran berhasil ditambahkan!');
+}
+
+function deleteViolationType(id){
+    const type = violationTypes.find(t => t.id === id);
+    if (!type) return;
+    
+    const violationsCount = violations.filter(v => v.typeId === id).length;
+    
+    if (violationsCount > 0) {
+        if (!confirm(`Jenis pelanggaran "${type.name}" digunakan dalam ${violationsCount} data pelanggaran. Jika dihapus, data pelanggaran tersebut juga akan terpengaruh. Lanjutkan hapus?`)) {
+            return;
+        }
+        violations = violations.filter(v => v.typeId !== id);
+        saveViolations();
+        renderViolationsTable();
+    } else {
+        if (!confirm(`Apakah Anda yakin ingin menghapus jenis pelanggaran "${type.name}"?`)) return;
+    }
+    
+    violationTypes = violationTypes.filter(t => t.id !== id);
+    saveViolationTypes();
+    renderViolationTypesTable();
+    populateViolationTypes();
+    showAlert('Jenis pelanggaran berhasil dihapus!');
+}
+
+function populateViolationTypes(){
+    const select = document.getElementById('viType');
+    select.innerHTML = '';
+    
+    violationTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type.id;
+        option.textContent = `${type.name} (${type.points} poin)`;
+        select.appendChild(option);
+    });
+    
+    select.addEventListener('change', function() {
+        const type = violationTypes.find(t => t.id === parseInt(this.value));
+        document.getElementById('viPoints').value = type ? type.points : '';
+    });
+    
+    if (violationTypes.length > 0) {
+        select.value = violationTypes[0].id;
+        document.getElementById('viPoints').value = violationTypes[0].points;
+    }
+}
+
+function handleStudentSearchInput(event) {
+    const dropdown = document.getElementById('studentSearchDropdown');
+    const searchTerm = event.target.value.toLowerCase().trim();
+    
+    if (searchTerm.length < 1) {
+        dropdown.classList.add('d-none');
+        return;
+    }
+    
+    const filteredStudents = students.filter(s => 
+        s.nama?.toLowerCase().trim().includes(searchTerm) || 
+        s.nis?.toLowerCase().trim().includes(searchTerm)
+    );
+    
+    dropdown.innerHTML = '';
+    
+    if (filteredStudents.length > 0) {
+        const maxResults = 5;
+        const limitedResults = filteredStudents.slice(0, maxResults);
+        
+        limitedResults.forEach(student => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.innerHTML = `<strong>${escapeHtml(student.nis)}</strong> - ${escapeHtml(student.nama)} - ${escapeHtml(student.kelas || '-')}`;
+            item.onclick = () => selectStudentFromDropdown(student);
+            dropdown.appendChild(item);
+        });
+        
+        if (filteredStudents.length > maxResults) {
+            const footer = document.createElement('div');
+            footer.className = 'dropdown-footer';
+            footer.textContent = `Menampilkan ${maxResults} dari ${filteredStudents.length} hasil`;
+            dropdown.appendChild(footer);
+        }
+        
+        dropdown.classList.remove('d-none');
+    } else {
+        dropdown.innerHTML = '<div class="dropdown-item text-muted">Tidak ada siswa ditemukan</div>';
+        dropdown.classList.remove('d-none');
+    }
+}
+
+function selectStudentFromDropdown(student) {
+    selectedStudentForViolation = student;
+    document.getElementById('viStudentSelected').value = `${student.nis} - ${student.nama} - ${student.kelas || '-'}`;
+    document.getElementById('viStudentSearch').value = '';
+    document.getElementById('studentSearchDropdown').classList.add('d-none');
+}
+
+document.addEventListener('click', function(event) {
+    const searchContainers = document.querySelectorAll('.search-container');
+    let clickedInside = false;
+    searchContainers.forEach(container => {
+        if (container.contains(event.target)) {
+            clickedInside = true;
+        }
+    });
+    
+    if (!clickedInside) {
+        document.getElementById('studentSearchDropdown').classList.add('d-none');
+        document.getElementById('studentSearchDropdownTable').classList.add('d-none');
+        document.getElementById('rekapSiswaSearchDropdown').classList.add('d-none');
+        document.getElementById('laporanSiswaSearchDropdown').classList.add('d-none');
+    }
+});
+
+function addViolation(){
+    if (!selectedStudentForViolation) {
+        showAlert('Pilih siswa terlebih dahulu!', 'danger');
+        return;
+    }
+    
+    const typeId = parseInt(document.getElementById('viType').value);
+    const type = violationTypes.find(t => t.id === typeId);
+    const date = document.getElementById('viDate').value;
+    const note = document.getElementById('viNote').value.trim();
+    
+    if (!type || !date) {
+        showAlert('Jenis pelanggaran dan tanggal harus diisi!', 'danger');
+        return;
+    }
+    
+    const violation = {
+        id: nextViolationId++,
+        studentNis: selectedStudentForViolation.nis,
+        studentName: selectedStudentForViolation.nama,
+        studentClass: selectedStudentForViolation.kelas || '',
+        typeId: type.id,
+        typeName: type.name,
+        points: type.points,
+        date: date,
+        note: note
+    };
+    
+    violations.push(violation);
+    saveViolations();
+    renderViolationsTable();
+    
+    document.getElementById('viStudentSelected').value = '';
+    document.getElementById('viNote').value = '';
+    selectedStudentForViolation = null;
+    
+    showAlert('Pelanggaran berhasil dicatat!');
+}
+
+function renderViolationsTable(){
+    const tbody = document.querySelector('#violationsTable tbody');
+    tbody.innerHTML = '';
+    
+    const sortedViolations = [...violations].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    sortedViolations.forEach(violation => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${formatDate(violation.date)}</td>
+            <td>${escapeHtml(violation.studentNis)}</td>
+            <td>${escapeHtml(violation.studentName)}</td>
+            <td>${escapeHtml(violation.studentClass || '-')}</td>
+            <td>${escapeHtml(violation.typeName)}</td>
+            <td><span class="badge bg-${violation.points > 15 ? 'danger' : violation.points > 5 ? 'warning' : 'info'}">${violation.points}</span></td>
+            <td>${escapeHtml(violation.note || '-')}</td>
+            <td><button class="btn btn-sm btn-outline-danger" onclick="deleteViolation(${violation.id})">Hapus</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function deleteViolation(id){
+    if (!confirm('Apakah Anda yakin ingin menghapus data pelanggaran ini?')) return;
+    
+    violations = violations.filter(v => v.id !== id);
+    saveViolations();
+    renderViolationsTable();
+    showAlert('Data pelanggaran berhasil dihapus!');
+}
+
+// =============================================================================
+// 8. REKAP PELANGGARAN (Versi Lama - Snapshot)
+// =============================================================================
+function handleRekapTypeChange() {
+    const rekapType = document.getElementById('rekapType').value;
+    const siswaContainer = document.getElementById('rekapSiswaContainer');
+    const kelasContainer = document.getElementById('rekapKelasContainer');
+    
+    siswaContainer.classList.add('d-none');
+    kelasContainer.classList.add('d-none');
+    
+    if (rekapType === 'per-siswa') {
+        siswaContainer.classList.remove('d-none');
+    } else if (rekapType === 'per-kelas') {
+        kelasContainer.classList.remove('d-none');
+    }
+    
+    document.getElementById('rekapArea').innerHTML = '<p class="text-muted">Pilih jenis laporan lalu klik <strong>Tampilkan Rekap</strong> untuk melihat data pelanggaran.</p>';
+}
+
+function populateClassDropdown() {
+    const select = document.getElementById('rekapKelas');
+    if (!select) return;
+    
+    const classes = [...new Set(students.map(s => s.kelas).filter(k => k))].sort();
+    
+    select.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+    classes.forEach(cls => {
+        const opt = document.createElement('option');
+        opt.value = cls;
+        opt.textContent = cls;
+        select.appendChild(opt);
+    });
+}
+
+function handleRekapSiswaSearchInput(event) {
+    const dropdown = document.getElementById('rekapSiswaSearchDropdown');
+    const searchTerm = event.target.value.toLowerCase().trim();
+    
+    if (searchTerm.length < 1) {
+        dropdown.classList.add('d-none');
+        return;
+    }
+    
+    const filteredStudents = students.filter(s => 
+        s.nama?.toLowerCase().trim().includes(searchTerm) || 
+        s.nis?.toLowerCase().trim().includes(searchTerm)
+    );
+    
+    dropdown.innerHTML = '';
+    
+    if (filteredStudents.length > 0) {
+        const maxResults = 5;
+        const limitedResults = filteredStudents.slice(0, maxResults);
+        
+        limitedResults.forEach(student => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.innerHTML = `<strong>${escapeHtml(student.nis)}</strong> - ${escapeHtml(student.nama)} - ${escapeHtml(student.kelas || '-')}`;
+            item.onclick = () => selectRekapSiswaFromDropdown(student);
+            dropdown.appendChild(item);
+        });
+        
+        if (filteredStudents.length > maxResults) {
+            const footer = document.createElement('div');
+            footer.className = 'dropdown-footer';
+            footer.textContent = `Menampilkan ${maxResults} dari ${filteredStudents.length} hasil`;
+            dropdown.appendChild(footer);
+        }
+        
+        dropdown.classList.remove('d-none');
+    } else {
+        dropdown.innerHTML = '<div class="dropdown-item text-muted">Tidak ada siswa ditemukan</div>';
+        dropdown.classList.remove('d-none');
+    }
+}
+
+function selectRekapSiswaFromDropdown(student) {
+    selectedStudentForRekap = student;
+    document.getElementById('rekapSiswaSearch').value = `${student.nis} - ${student.nama} - ${student.kelas || '-'}`;
+    document.getElementById('rekapSiswaSearchDropdown').classList.add('d-none');
+}
+
+function tampilkanRekap() {
+    const rekapType = document.getElementById('rekapType').value;
+    const area = document.getElementById('rekapArea');
+    
+    if (rekapType === 'per-siswa') {
+        renderRekapPerSiswa(area);
+    } else if (rekapType === 'per-kelas') {
+        renderRekapPerKelas(area);
+    } else if (rekapType === 'semua') {
+        renderRekapSemua(area);
+    } else {
+        area.innerHTML = '<p class="text-muted">Pilih jenis laporan untuk melihat rekap pelanggaran.</p>';
+    }
+}
+
+function renderRekapPerSiswa(area) {
+    if (!selectedStudentForRekap) {
+        area.innerHTML = '<p class="text-muted">Pilih siswa terlebih dahulu untuk melihat rekap pelanggaran.</p>';
+        return;
+    }
+    
+    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
+    const kepala = schoolInfo.kepala || 'Kepala Sekolah';
+    
+    const studentViolations = violations.filter(v => v.studentNis === selectedStudentForRekap.nis)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    let content = `
+    <div id="rekapPelanggaran" style="font-family: Times, serif; line-height:1.5; padding:18px;">
+      <div style="text-align:center; margin-bottom:8px;">
+        ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:90px; height:auto; margin-bottom:5px;">` : ''}
+        <h2 style="margin:0;">${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+        <p style="margin:0;">${escapeHtml(schoolInfo.address || '')}</p>
+        <hr style="border:1px solid #000; margin-top:10px;">
+      </div>
+
+      <h3 style="text-align:center; margin-top:12px; margin-bottom:12px;">REKAP DATA PELANGGARAN PER SISWA</h3>
+
+      <table style="width:100%; margin-bottom:12px;">
+        <tr><td style="width:120px">NIS</td><td>: ${escapeHtml(selectedStudentForRekap.nis)}</td></tr>
+        <tr><td>Nama</td><td>: ${escapeHtml(selectedStudentForRekap.nama)}</td></tr>
+        <tr><td>Kelas</td><td>: ${escapeHtml(selectedStudentForRekap.kelas||'-')}</td></tr>
+      </table>
+
+      <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+        <thead>
+          <tr style="background:#f5f5f5;"><th style="border:1px solid #ddd; padding:6px;">No</th><th style="border:1px solid #ddd; padding:6px;">Tanggal</th><th style="border:1px solid #ddd; padding:6px;">Jenis Pelanggaran</th><th style="border:1px solid #ddd; padding:6px; text-align:center;">Poin</th><th style="border:1px solid #ddd; padding:6px;">Keterangan</th></tr>
+        </thead>
+        <tbody>`;
+    
+    let total = 0;
+    studentViolations.forEach((v,i)=>{
+        total += v.points;
+        content += `<tr><td style="border:1px solid #ddd; padding:6px; text-align:center;">${i+1}</td><td style="border:1px solid #ddd; padding:6px;">${formatDate(v.date)}</td><td style="border:1px solid #ddd; padding:6px;">${escapeHtml(v.typeName)}</td><td style="border:1px solid #ddd; padding:6px; text-align:center;">${v.points}</td><td style="border:1px solid #ddd; padding:6px;">${escapeHtml(v.note||'-')}</td></tr>`;
+    });
+    
+    content += `</tbody></table>`;
+    content += `<div style="text-align:right; font-weight:bold; margin-bottom:24px;">Total Poin: ${total}</div>`;
+    content += `<div style="display:flex; justify-content:space-between; margin-top:40px;">
+        <div style="width:45%;">Mengetahui<br>Kepala Sekolah<br><br><br><strong>${escapeHtml(kepala)}</strong></div>
+        <div style="width:45%; text-align:right;">${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>Yang membuat,<br><br><br><strong>${escapeHtml(selectedStudentForRekap.nama)}</strong><br>NIS: ${escapeHtml(selectedStudentForRekap.nis)}</div>
+      </div>
+    </div>`;
+
+    area.innerHTML = content;
+}
+
+function renderRekapPerKelas(area) {
+    const selectedClass = document.getElementById('rekapKelas').value;
+    
+    if (!selectedClass) {
+        area.innerHTML = '<p class="text-muted">Pilih kelas untuk melihat rekap pelanggaran.</p>';
+        return;
+    }
+    
+    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
+    const kepala = schoolInfo.kepala || 'Kepala Sekolah';
+    
+    const classViolations = violations.filter(v => {
+        const student = students.find(s => s.nis === v.studentNis);
+        return student && student.kelas === selectedClass;
+    }).sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const violationsByStudent = {};
+    classViolations.forEach(v => {
+        if (!violationsByStudent[v.studentNis]) {
+            violationsByStudent[v.studentNis] = {
+                student: students.find(s => s.nis === v.studentNis),
+                violations: [],
+                totalPoints: 0
+            };
+        }
+        violationsByStudent[v.studentNis].violations.push(v);
+        violationsByStudent[v.studentNis].totalPoints += v.points;
+    });
+    
+    let content = `
+    <div id="rekapPelanggaran" style="font-family: Times, serif; line-height:1.5; padding:18px;">
+      <div style="text-align:center; margin-bottom:8px;">
+        ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:90px; height:auto; margin-bottom:5px;">` : ''}
+        <h2 style="margin:0;">${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+        <p style="margin:0;">${escapeHtml(schoolInfo.address || '')}</p>
+        <hr style="border:1px solid #000; margin-top:10px;">
+      </div>
+
+      <h3 style="text-align:center; margin-top:12px; margin-bottom:12px;">REKAP DATA PELANGGARAN PER KELAS</h3>
+      <h4 style="text-align:center; margin-bottom:12px;">Kelas: ${escapeHtml(selectedClass)}</h4>
+      <p style="text-align:center; margin-bottom:20px;">Periode: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
+
+      <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+        <thead>
+          <tr style="background:#f5f5f5;">
+            <th style="border:1px solid #ddd; padding:6px;">No</th>
+            <th style="border:1px solid #ddd; padding:6px;">NIS</th>
+            <th style="border:1px solid #ddd; padding:6px;">Nama Siswa</th>
+            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Jumlah Pelanggaran</th>
+            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Total Poin</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    
+    let no = 1;
+    let totalClassViolations = 0;
+    let totalClassPoints = 0;
+    
+    const sortedStudents = Object.values(violationsByStudent).sort((a, b) => b.totalPoints - a.totalPoints);
+    
+    sortedStudents.forEach(({ student, violations: studentViolations, totalPoints }) => {
+        totalClassViolations += studentViolations.length;
+        totalClassPoints += totalPoints;
+        
+        content += `
+          <tr>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${no++}</td>
+            <td style="border:1px solid #ddd; padding:6px;">${escapeHtml(student.nis)}</td>
+            <td style="border:1px solid #ddd; padding:6px;">${escapeHtml(student.nama)}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${studentViolations.length}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">
+              <span class="badge bg-${totalPoints > 20 ? 'danger' : totalPoints > 10 ? 'warning' : 'success'}">${totalPoints}</span>
+            </td>
+          </tr>`;
+    });
+    
+    content += `
+        </tbody>
+        <tfoot>
+          <tr style="background:#f5f5f5; font-weight:bold;">
+            <td colspan="3" style="border:1px solid #ddd; padding:6px; text-align:right;">TOTAL:</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalClassViolations}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalClassPoints}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <h4 style="margin-top:30px; margin-bottom:15px;">Detail Pelanggaran per Siswa</h4>`;
+    
+    sortedStudents.forEach(({ student, violations: studentViolations }) => {
+        content += `
+          <div style="margin-bottom:20px; page-break-inside: avoid;">
+            <h5 style="margin-bottom:10px;">${escapeHtml(student.nama)} (${escapeHtml(student.nis)})</h5>
+            <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+              <thead>
+                <tr style="background:#f9f9f9;">
+                  <th style="border:1px solid #ccc; padding:4px;">No</th>
+                  <th style="border:1px solid #ccc; padding:4px;">Tanggal</th>
+                  <th style="border:1px solid #ccc; padding:4px;">Jenis Pelanggaran</th>
+                  <th style="border:1px solid #ccc; padding:4px; text-align:center;">Poin</th>
+                  <th style="border:1px solid #ccc; padding:4px;">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>`;
+        
+        studentViolations.forEach((v, i) => {
+            content += `
+              <tr>
+                <td style="border:1px solid #ccc; padding:4px; text-align:center;">${i+1}</td>
+                <td style="border:1px solid #ccc; padding:4px;">${formatDate(v.date)}</td>
+                <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(v.typeName)}</td>
+                <td style="border:1px solid #ccc; padding:4px; text-align:center;">${v.points}</td>
+                <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(v.note || '-')}</td>
+              </tr>`;
+        });
+        
+        content += `
+              </tbody>
+            </table>
+          </div>`;
+    });
+    
+    content += `
+      <div style="display:flex; justify-content:space-between; margin-top:40px;">
+        <div style="width:45%;">Mengetahui<br>Kepala Sekolah<br><br><br><strong>${escapeHtml(kepala)}</strong></div>
+        <div style="width:45%; text-align:right;">${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>Waka Kesiswaan,<br><br><br><strong>${escapeHtml(schoolInfo.waka || 'Waka Kesiswaan')}</strong></div>
+      </div>
+    </div>`;
+    
+    area.innerHTML = content;
+}
+
+function renderRekapSemua(area) {
+    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
+    const kepala = schoolInfo.kepala || 'Kepala Sekolah';
+    
+    const violationsByClass = {};
+    violations.forEach(v => {
+        const student = students.find(s => s.nis === v.studentNis);
+        const className = student ? (student.kelas || 'Tidak Diketahui') : 'Tidak Diketahui';
+        
+        if (!violationsByClass[className]) {
+            violationsByClass[className] = {
+                students: {},
+                totalViolations: 0,
+                totalPoints: 0
+            };
+        }
+        
+        if (!violationsByClass[className].students[v.studentNis]) {
+            violationsByClass[className].students[v.studentNis] = {
+                student: student,
+                violations: [],
+                totalPoints: 0
+            };
+        }
+        
+        violationsByClass[className].students[v.studentNis].violations.push(v);
+        violationsByClass[className].students[v.studentNis].totalPoints += v.points;
+        violationsByClass[className].totalViolations++;
+        violationsByClass[className].totalPoints += v.points;
+    });
+    
+    let content = `
+    <div id="rekapPelanggaran" style="font-family: Times, serif; line-height:1.5; padding:18px;">
+      <div style="text-align:center; margin-bottom:8px;">
+        ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:90px; height:auto; margin-bottom:5px;">` : ''}
+        <h2 style="margin:0;">${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+        <p style="margin:0;">${escapeHtml(schoolInfo.address || '')}</p>
+        <hr style="border:1px solid #000; margin-top:10px;">
+      </div>
+
+      <h3 style="text-align:center; margin-top:12px; margin-bottom:12px;">REKAP DATA PELANGGARAN SELURUH SISWA</h3>
+      <p style="text-align:center; margin-bottom:20px;">Periode: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
+
+      <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
+        <thead>
+          <tr style="background:#f5f5f5;">
+            <th style="border:1px solid #ddd; padding:6px;">No</th>
+            <th style="border:1px solid #ddd; padding:6px;">Kelas</th>
+            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Jumlah Siswa</th>
+            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Jumlah Pelanggaran</th>
+            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Total Poin</th>
+            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Rata-rata Poin</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    
+    let no = 1;
+    let totalAllViolations = 0;
+    let totalAllPoints = 0;
+    let totalAllStudents = 0;
+    
+    const sortedClasses = Object.entries(violationsByClass).sort((a, b) => b[1].totalPoints - a[1].totalPoints);
+    
+    sortedClasses.forEach(([className, data]) => {
+        const studentCount = Object.keys(data.students).length;
+        const avgPoints = studentCount > 0 ? (data.totalPoints / studentCount).toFixed(1) : 0;
+        
+        totalAllViolations += data.totalViolations;
+        totalAllPoints += data.totalPoints;
+        totalAllStudents += studentCount;
+        
+        content += `
+          <tr>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${no++}</td>
+            <td style="border:1px solid #ddd; padding:6px;">${escapeHtml(className)}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${studentCount}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${data.totalViolations}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">
+              <span class="badge bg-${data.totalPoints > 100 ? 'danger' : data.totalPoints > 50 ? 'warning' : 'success'}">${data.totalPoints}</span>
+            </td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${avgPoints}</td>
+          </tr>`;
+    });
+    
+    const overallAvg = totalAllStudents > 0 ? (totalAllPoints / totalAllStudents).toFixed(1) : 0;
+    
+    content += `
+        </tbody>
+        <tfoot>
+          <tr style="background:#f5f5f5; font-weight:bold;">
+            <td colspan="2" style="border:1px solid #ddd; padding:6px; text-align:right;">TOTAL KESELURUHAN:</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalAllStudents}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalAllViolations}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalAllPoints}</td>
+            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${overallAvg}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <h4 style="margin-top:30px; margin-bottom:15px;">Detail Pelanggaran per Kelas</h4>`;
+    
+    sortedClasses.forEach(([className, data]) => {
+        content += `
+          <div style="margin-bottom:20px; page-break-inside: avoid;">
+            <h5 style="margin-bottom:10px; background:#f0f0f0; padding:8px; border-radius:4px;">Kelas: ${escapeHtml(className)} (${data.totalViolations} pelanggaran, ${data.totalPoints} poin)</h5>
+            <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+              <thead>
+                <tr style="background:#f9f9f9;">
+                  <th style="border:1px solid #ccc; padding:4px;">No</th>
+                  <th style="border:1px solid #ccc; padding:4px;">NIS</th>
+                  <th style="border:1px solid #ccc; padding:4px;">Nama</th>
+                  <th style="border:1px solid #ccc; padding:4px;">Tanggal</th>
+                  <th style="border:1px solid #ccc; padding:4px;">Jenis Pelanggaran</th>
+                  <th style="border:1px solid #ccc; padding:4px; text-align:center;">Poin</th>
+                  <th style="border:1px solid #ccc; padding:4px;">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>`;
+        
+        let studentNo = 1;
+        Object.values(data.students).forEach(({ student, violations: studentViolations }) => {
+            studentViolations.forEach(v => {
+                content += `
+                  <tr>
+                    <td style="border:1px solid #ccc; padding:4px; text-align:center;">${studentNo++}</td>
+                    <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(student ? student.nis : v.studentNis)}</td>
+                    <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(student ? student.nama : v.studentName)}</td>
+                    <td style="border:1px solid #ccc; padding:4px;">${formatDate(v.date)}</td>
+                    <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(v.typeName)}</td>
+                    <td style="border:1px solid #ccc; padding:4px; text-align:center;">${v.points}</td>
+                    <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(v.note || '-')}</td>
+                  </tr>`;
+            });
+        });
+        
+        content += `
+              </tbody>
+            </table>
+          </div>`;
+    });
+    
+    content += `
+      <div style="display:flex; justify-content:space-between; margin-top:40px;">
+        <div style="width:45%;">Mengetahui<br>Kepala Sekolah<br><br><br><strong>${escapeHtml(kepala)}</strong></div>
+        <div style="width:45%; text-align:right;">${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>Waka Kesiswaan,<br><br><br><strong>${escapeHtml(schoolInfo.waka || 'Waka Kesiswaan')}</strong></div>
+      </div>
+    </div>`;
+    
+    area.innerHTML = content;
+}
+
+function createPrintFrame(content, title) {
+    const existingFrame = document.getElementById('printFrame');
+    if (existingFrame) existingFrame.remove();
+    
+    const iframe = document.createElement('iframe');
+    iframe.id = 'printFrame';
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
+    
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>${title}</title>
+                <style>
+                    @page { size: A4; margin: 20mm; }
+                    body { font-family: Times, serif; line-height: 1.4; margin: 0; padding: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                    th, td { border: 1px solid #333; padding: 6px; text-align: left; }
+                    th { background-color: #f5f5f5; font-weight: bold; }
+                    .text-center { text-align: center; }
+                    .text-right { text-align: right; }
+                    .mt-40 { margin-top: 40px; }
+                    img { max-width: 120px; height: auto; }
+                    .badge { padding: 3px 6px; border-radius: 3px; font-size: 0.8em; display: inline-block; }
+                    .badge-success { background-color: #28a745; color: white; }
+                    .badge-warning { background-color: #ffc107; color: black; }
+                    .badge-danger { background-color: #dc3545; color: white; }
+                </style>
+            </head>
+            <body>
+                ${content}
+                <script>window.onload = function() { setTimeout(function() { window.print(); setTimeout(function() { window.close(); }, 100); }, 500); };<\/script>
+            </body>
+        </html>
+    `);
+    iframeDoc.close();
+}
+
+function cetakRekap(){
+    const rekapType = document.getElementById('rekapType').value;
+    
+    if (rekapType === 'per-siswa') {
+        if(!selectedStudentForRekap){ showAlert('Pilih siswa terlebih dahulu!', 'danger'); return; }
+    } else if (rekapType === 'per-kelas') {
+        const selectedClass = document.getElementById('rekapKelas').value;
+        if(!selectedClass){ showAlert('Pilih kelas terlebih dahulu!', 'danger'); return; }
+    }
+    
+    if (!document.getElementById('rekapPelanggaran')) {
+        tampilkanRekap();
+    }
+    
+    setTimeout(() => {
+        const rekapElement = document.getElementById('rekapPelanggaran');
+        if (!rekapElement) { 
+            showAlert('Gagal membuat konten untuk dicetak. Silakan coba lagi.', 'danger'); 
+            return; 
+        }
+        
+        let title = 'Rekap Data Pelanggaran';
+        if (rekapType === 'per-siswa') {
+            title = `Rekap Pelanggaran ${selectedStudentForRekap.nama}`;
+        } else if (rekapType === 'per-kelas') {
+            const selectedClass = document.getElementById('rekapKelas').value;
+            title = `Rekap Pelanggaran Kelas ${selectedClass}`;
+        } else if (rekapType === 'semua') {
+            title = 'Rekap Pelanggaran Seluruh Siswa';
+        }
+        
+        createPrintFrame(rekapElement.outerHTML, title);
+        showAlert('Dialog cetak akan segera terbuka...', 'info', 3000);
+    }, 500);
+}
+
+function backupPDF() {
+    const rekapElement = document.getElementById('rekapPelanggaran');
+    if (!rekapElement) {
+        showAlert('Tampilkan rekap terlebih dahulu sebelum backup PDF!', 'warning');
+        return;
+    }
+    
+    showAlert('Sedang membuat PDF...', 'info', 10000);
+    
+    try {
+        html2canvas(rekapElement, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            allowTaint: true
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 295;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+            
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            
+            const rekapType = document.getElementById('rekapType').value;
+            let fileName = 'rekap_pelanggaran';
+            
+            if (rekapType === 'per-siswa') {
+                fileName = `rekap_pelanggaran_${selectedStudentForRekap.nama}`;
+            } else if (rekapType === 'per-kelas') {
+                const selectedClass = document.getElementById('rekapKelas').value;
+                fileName = `rekap_pelanggaran_kelas_${selectedClass}`;
+            } else if (rekapType === 'semua') {
+                fileName = 'rekap_pelanggaran_semua';
+            }
+            
+            fileName += `_${new Date().toISOString().split('T')[0]}.pdf`;
+            pdf.save(fileName);
+            showAlert('PDF berhasil dibuat dan diunduh!', 'success');
+        }).catch(error => {
+            console.error('Error creating PDF:', error);
+            showAlert('Gagal membuat PDF. Pastikan library html2canvas dan jsPDF telah dimuat dengan benar.', 'danger');
+        });
+    } catch (error) {
+        console.error('Error in backupPDF:', error);
+        showAlert('Terjadi kesalahan saat membuat PDF. Pastikan library html2canvas dan jsPDF telah dimuat dengan benar.', 'danger');
+    }
+}
+
+function printSemuaRiwayatPelanggaran(){
+    if(violations.length === 0){ showAlert('Belum ada data pelanggaran untuk dicetak!', 'warning'); return; }
+    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
+    const logo = schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:90px; height:auto; margin-bottom:5px;">` : '';
+    const kepala = schoolInfo.kepala || 'Kepala Sekolah';
+    const today = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+    const header = `
+        <div class="text-center mb-20">
+            ${logo}
+            <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+            <p>${escapeHtml(schoolInfo.address || '')}</p>
+            <hr style="border:1px solid #000; margin-top:10px;">
+            <h3>REKAPITULASI RIWAYAT PELANGGARAN SISWA</h3>
+            <p>Tanggal Cetak: ${today}</p>
+        </div>
+    `;
+    const full = violations.map(v=>{ const s = students.find(st=>st.nis===v.studentNis)||{}; return { date: v.date, nis: s.nis || v.studentNis || '-', nama: s.nama || '-', kelas: s.kelas || '-', jenis: v.typeName || '-', poin: v.points || 0, note: v.note || '' }; }).sort((a,b)=> new Date(a.date)-new Date(b.date));
+    let table = '<table><thead><tr><th>No</th><th>Tanggal</th><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Jenis Pelanggaran</th><th>Poin</th><th>Keterangan</th></tr></thead><tbody>';
+    full.forEach((r,i)=>{ const tgl = new Date(r.date).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); table += `<tr><td class="text-center">${i+1}</td><td>${tgl}</td><td>${escapeHtml(r.nis)}</td><td>${escapeHtml(r.nama)}</td><td>${escapeHtml(r.kelas)}</td><td>${escapeHtml(r.jenis)}</td><td class="text-center">${r.poin}</td><td>${escapeHtml(r.note)}</td></tr>`; });
+    table += '</tbody></table>';
+    table += `<div class="text-right" style="font-weight:bold; margin-top:10px;">Total Pelanggaran Tercatat: ${full.length}</div>`;
+    const content = header + table + `<div class="mt-40 text-center"><div>${schoolInfo.city || schoolInfo.kota || 'Jakarta'}, ${today}</div><div>Mengetahui<br>Kepala Sekolah</div><br><br><br><div><strong>${escapeHtml(kepala)}</strong></div></div>`;
+    createPrintFrame(content, 'Rekap Riwayat Pelanggaran');
+    showAlert('Dialog cetak akan segera terbuka...', 'info', 3000);
+}
+
+// =============================================================================
+// 9. BACKUP & RESTORE FUNCTIONS (Mobile-Friendly Version)
+// =============================================================================
+function downloadDataAsFile(dataString, fileName) {
+    try {
+        const blob = new Blob([dataString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        showAlert('File backup berhasil diunduh!', 'success');
+    } catch (error) {
+        console.error("Download failed:", error);
+        showAlert('Gagal mengunduh file. Mencoba metode alternatif...', 'warning');
+        openDataInNewWindow(dataString);
+    }
+}
+
+function openDataInNewWindow(dataString) {
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+        newWindow.document.write(`<html><head><title>Backup Data</title></head><body><h2>Backup Data Aplikasi</h2><p>Salin semua data di bawah ini dan simpan sebagai file .json:</p><textarea style="width:100%; height:400px; font-family:monospace;">${dataString.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea><br><br><button onclick="window.close()">Tutup</button></body></html>`);
+        newWindow.document.close();
+        showAlert('Silakan salin data dari jendela baru dan simpan sebagai file .json', 'info', 5000);
+    } else {
+        showAlert('Tidak dapat membuka jendela baru. Pastikan browser Anda mengizinkan popup.', 'danger');
+    }
+}
+
+function exportJSON() {
+    const data = { school_info: JSON.parse(localStorage.getItem('school_info')||'{}'), students: students, violation_types: violationTypes, violations: violations, next_type_id: nextTypeId, next_violation_id: nextViolationId, export_date: new Date().toISOString(), app_version: '2.3' };
+    const dataStr = JSON.stringify(data, null, 2);
+    const fileName = `backup_data_${new Date().toISOString().split('T')[0]}.json`;
+    downloadDataAsFile(dataStr, fileName);
+}
+
+function exportViolationsJSON() {
+    const dataStr = JSON.stringify(violations, null, 2);
+    const fileName = `backup_pelanggaran_${new Date().toISOString().split('T')[0]}.json`;
+    downloadDataAsFile(dataStr, fileName);
+}
+
+function handleImportJSON(event) {
+    const file = event.target.files[0]; if (!file) return;
+    showAlert('Sedang memproses file...', 'info', 10000);
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data || typeof data !== 'object') throw new Error('Format file tidak valid');
+            let importCount = 0;
+            if (data.school_info) { localStorage.setItem('school_info', JSON.stringify(data.school_info)); loadSchoolInfo(); importCount++; }
+            if (data.students && Array.isArray(data.students)) { students = data.students; saveStudents(); importCount++; }
+            if (data.violation_types && Array.isArray(data.violation_types)) { violationTypes = data.violation_types; saveViolationTypes(); importCount++; }
+            if (data.violations && Array.isArray(data.violations)) { violations = data.violations; saveViolations(); importCount++; }
+            if (data.next_type_id) nextTypeId = data.next_type_id;
+            if (data.next_violation_id) nextViolationId = data.next_violation_id;
+            showAlert(`Data berhasil dipulihkan! (${importCount} bagian diimpor)`, 'success', 5000);
+            const currentPage = document.querySelector('.page:not(.d-none)').id.replace('page_', ''); showPage(currentPage);
+        } catch (err) { console.error('Import error:', err); showAlert('Error memuat file backup: ' + err.message, 'danger', 5000); }
+    };
+    reader.onerror = function() { showAlert('Error membaca file. Pastikan file tidak rusak.', 'danger', 5000); };
+    reader.readAsText(file); event.target.value = '';
+}
+
+function mergeViolationsJSON(event) {
+    const files = event.target.files; if (!files || files.length === 0) { showAlert('Tidak ada file yang dipilih untuk digabung.', 'warning'); return; }
+    let added = 0, duplicates = 0, malformed = 0;
+    const existing = JSON.parse(localStorage.getItem('violations')||'[]');
+    const existingKeys = new Set(existing.map(v => { const d = (v.date) ? (new Date(v.date).toISOString().split('T')[0]) : ''; return `${v.studentNis}||${d}||${(v.typeName||'')}`; }));
+    let maxId = existing.reduce((m, v) => Math.max(m, (v.id||0)), 0);
+    const readers = Array.from(files).map(f => { return new Promise(resolve => { const r = new FileReader(); r.onload = () => resolve({ok: true, text: r.result}); r.onerror = () => resolve({ok: false}); r.readAsText(f); }); });
+    Promise.all(readers).then(results => {
+        const toAdd = [];
+        results.forEach(res => { if (!res.ok) { malformed++; return; } try { const parsed = JSON.parse(res.text); const arr = Array.isArray(parsed) ? parsed : (parsed.violations||[]); if (!Array.isArray(arr)) { malformed++; return; } arr.forEach(item => { const d = (item.date) ? (new Date(item.date).toISOString().split('T')[0]) : ''; const key = `${item.studentNis}||${d}||${(item.typeName||'')}`; if (!existingKeys.has(key)) { maxId++; const newItem = Object.assign({}, item); newItem.id = maxId; if (newItem.date) newItem.date = new Date(newItem.date).toISOString().split('T')[0]; toAdd.push(newItem); existingKeys.add(key); added++; } else { duplicates++; } }); } catch (err) { malformed++; } });
+        if (toAdd.length > 0) { const merged = existing.concat(toAdd); localStorage.setItem('violations', JSON.stringify(merged)); saveViolations(); renderViolationsTable(); }
+        showAlert(`Proses gabung selesai. Ditambahkan: ${added} entri. Duplikat dilewati: ${duplicates}. File rusak: ${malformed}.`, added>0?'success':'info', 7000);
+        document.getElementById('mergeViolationsInput').value = '';
+    });
+}
+
+function resetAll() {
+    if (!confirm('Apakah Anda yakin ingin menghapus SEMUA data? Tindakan ini tidak dapat dibatalkan!')) return;
+    if (!confirm('PERINGATAN: Semua data siswa, pelanggaran, dan pengaturan akan dihapus permanen. Lanjutkan?')) return;
+    localStorage.clear();
+    students = []; violations = []; violationTypes = [ {id:1,name:'Terlambat',points:5}, {id:2,name:'Tidak Pakai Seragam',points:10}, {id:3,name:'Bolos',points:20}, {id:4,name:'Bullying',points:30}, {id:5,name:'Tidak ikut upacara',points:15}, {id:6,name:'Tidak Ikut sholat berjamaah',points:20}, {id:7,name:'Merokok dilingkungan sekolah',points:15}, {id:8,name:'Tidak Ikut Kegiatan Sekolah',points:10}, {id:9,name:'Berkelahi sesama teman sekolah',points:20} ]; nextTypeId = 10; nextViolationId = 1; selectedStudentForViolation = null; selectedStudentForRekap = null;
+    showAlert('Semua data telah dihapus. Aplikasi akan dimuat ulang.');
+    setTimeout(()=>{ location.reload(); }, 1000);
+}
+
+function addPasteBackupButton() {
+    const settingsPage = document.getElementById('page_pengaturan');
+    if (settingsPage) {
+        const card = settingsPage.querySelector('.card');
+        if (card && !document.getElementById('pasteBackupBtn')) {
+            const pasteBtn = document.createElement('button');
+            pasteBtn.id = 'pasteBackupBtn';
+            pasteBtn.className = 'btn btn-sm btn-outline-info mt-2';
+            pasteBtn.innerHTML = '📋 Tempel Backup (Copy-Paste)';
+            pasteBtn.onclick = function() {
+                const backupText = prompt('Tempel data backup yang telah disalin:');
+                if (backupText) {
+                    try {
+                        const data = JSON.parse(backupText);
+                        const fakeEvent = { target: { files: [new File([backupText], 'backup.json', {type: 'application/json'})] } };
+                        handleImportJSON(fakeEvent);
+                    } catch (err) {
+                        showAlert('Error: Data yang ditempel tidak valid. Pastikan menyalin semua data dengan benar.', 'danger', 5000);
+                    }
+                }
+            };
+            card.appendChild(pasteBtn);
+        }
+    }
+}
+
+// =============================================================================
+// 10. LAPORAN (TREN) - LOGIKA YANG SUDAH DIPERBAIKI
+// =============================================================================
+
+function initializeLaporanPage() {
+    populateLaporanDateDropdowns();
+    populateLaporanClassDropdown();
+    
+    const currentDate = new Date();
+    const pastDate = new Date();
+    pastDate.setMonth(currentDate.getMonth() - 5);
+
+    document.getElementById('laporanDariBulan').value = String(pastDate.getMonth() + 1).padStart(2, '0');
+    document.getElementById('laporanDariTahun').value = pastDate.getFullYear();
+    document.getElementById('laporanSampaiBulan').value = String(currentDate.getMonth() + 1).padStart(2, '0');
+    document.getElementById('laporanSampaiTahun').value = currentDate.getFullYear();
+    
+    tampilkanLaporanDanGrafik();
+}
+
+function populateLaporanDateDropdowns() {
+    const dariBulanSelect = document.getElementById('laporanDariBulan');
+    const sampaiBulanSelect = document.getElementById('laporanSampaiBulan');
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    [dariBulanSelect, sampaiBulanSelect].forEach(select => {
+        select.innerHTML = '';
+        for (let i = 1; i <= 12; i++) {
+            const option = document.createElement('option');
+            option.value = String(i).padStart(2, '0');
+            option.textContent = monthNames[i - 1];
+            select.appendChild(option);
+        }
+    });
+}
+
+function populateLaporanClassDropdown() {
+    const select = document.getElementById('laporanKelas');
+    if (!select) return;
+    
+    const classes = [...new Set(students.map(s => s.kelas).filter(k => k))].sort();
+    
+    select.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+    classes.forEach(cls => {
+        const opt = document.createElement('option');
+        opt.value = cls;
+        opt.textContent = cls;
+        select.appendChild(opt);
+    });
+}
+
+function handleLaporanTypeChange() {
+    const laporanType = document.getElementById('laporanType').value;
+    const siswaContainer = document.getElementById('laporanSiswaContainer');
+    const kelasContainer = document.getElementById('laporanKelasContainer');
+    
+    siswaContainer.classList.add('d-none');
+    kelasContainer.classList.add('d-none');
+    
+    if (laporanType === 'per-siswa') {
+        siswaContainer.classList.remove('d-none');
+    } else if (laporanType === 'per-kelas') {
+        kelasContainer.classList.remove('d-none');
+    }
+}
+
+function handleLaporanSiswaSearchInput(event) {
+    const dropdown = document.getElementById('laporanSiswaSearchDropdown');
+    const searchTerm = event.target.value.toLowerCase().trim();
+    
+    if (searchTerm.length < 1) {
+        dropdown.classList.add('d-none');
+        return;
+    }
+    
+    const filteredStudents = students.filter(s => 
+        s.nama?.toLowerCase().trim().includes(searchTerm) || 
+        s.nis?.toLowerCase().trim().includes(searchTerm)
+    );
+    
+    dropdown.innerHTML = '';
+    
+    if (filteredStudents.length > 0) {
+        const maxResults = 5;
+        const limitedResults = filteredStudents.slice(0, maxResults);
+        
+        limitedResults.forEach(student => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.innerHTML = `<strong>${escapeHtml(student.nis)}</strong> - ${escapeHtml(student.nama)} - ${escapeHtml(student.kelas || '-')}`;
+            item.onclick = () => selectLaporanSiswaFromDropdown(student);
+            dropdown.appendChild(item);
+        });
+        
+        if (filteredStudents.length > maxResults) {
+            const footer = document.createElement('div');
+            footer.className = 'dropdown-footer';
+            footer.textContent = `Menampilkan ${maxResults} dari ${filteredStudents.length} hasil`;
+            dropdown.appendChild(footer);
+        }
+        
+        dropdown.classList.remove('d-none');
+    } else {
+        dropdown.innerHTML = '<div class="dropdown-item text-muted">Tidak ada siswa ditemukan</div>';
+        dropdown.classList.remove('d-none');
+    }
+}
+
+function selectLaporanSiswaFromDropdown(student) {
+    selectedStudentForLaporan = student;
+    document.getElementById('laporanSiswaSearch').value = `${student.nis} - ${student.nama} - ${student.kelas || '-'}`;
+    document.getElementById('laporanSiswaSearchDropdown').classList.add('d-none');
+}
+
+function tampilkanLaporanDanGrafik() {
+    const laporanType = document.getElementById('laporanType').value;
+    const dariBulan = document.getElementById('laporanDariBulan').value;
+    const dariTahun = document.getElementById('laporanDariTahun').value;
+    const sampaiBulan = document.getElementById('laporanSampaiBulan').value;
+    const sampaiTahun = document.getElementById('laporanSampaiTahun').value;
+
+    if (!dariBulan || !dariTahun || !sampaiBulan || !sampaiTahun) {
+        showAlert('Rentang waktu harus diisi lengkap!', 'danger');
+        return;
+    }
+
+    let targetSiswa = null;
+    let targetKelas = null;
+    if (laporanType === 'per-siswa') {
+        if (!selectedStudentForLaporan) { showAlert('Pilih siswa terlebih dahulu!', 'danger'); return; }
+        targetSiswa = selectedStudentForLaporan;
+    } else if (laporanType === 'per-kelas') {
+        targetKelas = document.getElementById('laporanKelas').value;
+        if (!targetKelas) { showAlert('Pilih kelas terlebih dahulu!', 'danger'); return; }
+    }
+    
+    const reportData = processViolationData(laporanType, targetSiswa, targetKelas, dariBulan, dariTahun, sampaiBulan, sampaiTahun);
+    
+    renderChart(reportData.labels, reportData.datasets);
+    renderLaporanTable(reportData.labels, reportData.counts, reportData.points);
+}
+
+function processViolationData(type, siswa, kelas, dariBulan, dariTahun, sampaiBulan, sampaiTahun) {
+    const startDate = new Date(`${dariTahun}-${dariBulan}-01`);
+    const endDate = new Date(`${sampaiTahun}-${sampaiBulan}-01`);
+    endDate.setMonth(endDate.getMonth() + 1);
+
+    const labels = [];
+    const counts = [];
+    const points = [];
+
+    const formatLabel = (date) => {
+        const options = { year: 'numeric', month: 'short' };
+        return date.toLocaleDateString('id-ID', options);
+    };
+
+    let currentDate = new Date(startDate);
+    while (currentDate < endDate) {
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth();
+
+        const monthlyViolations = violations.filter(v => {
+            const violationDate = new Date(v.date);
+            const isCorrectMonth = violationDate.getFullYear() === currentYear && violationDate.getMonth() === currentMonth;
+            if (!isCorrectMonth) return false;
+
+            if (type === 'per-siswa') {
+                return v.studentNis === siswa.nis;
+            } else if (type === 'per-kelas') {
+                const student = students.find(s => s.nis === v.studentNis);
+                return student && student.kelas === kelas;
+            }
+            return true;
+        });
+
+        labels.push(formatLabel(currentDate));
+        counts.push(monthlyViolations.length);
+        
+        const totalPoints = monthlyViolations.reduce((sum, v) => sum + v.points, 0);
+        points.push(totalPoints);
+
+        currentDate.setMonth(currentMonth + 1);
+    }
+
+    return {
+        labels: labels,
+        counts: counts,
+        points: points,
+        datasets: [{
+            label: 'Jumlah Pelanggaran',
+            data: counts,
+            fill: false,
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+        }]
+    };
+}
+
+function renderChart(labels, datasets) {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+
+    if (trendChartInstance) {
+        trendChartInstance.destroy();
+    }
+
+    trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            },
+            plugins: {
+                tooltip: { mode: 'index', intersect: false, },
+                legend: { position: 'top', },
+                title: { display: true, text: 'Grafik Tren Pelanggaran' }
+            }
+        }
+    });
+}
+
+function renderLaporanTable(labels, counts, points) {
+    const tbody = document.querySelector('#laporanTable tbody');
+    tbody.innerHTML = '';
+
+    if (labels.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="3" class="text-center">Tidak ada data untuk ditampilkan pada rentang waktu ini.</td>`;
+        tbody.appendChild(tr);
+        return;
+    }
+
+    labels.forEach((label, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${label}</td>
+            <td>${counts[index]}</td>
+            <td>${points[index]}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// =============================================================================
+// 11. LAPORAN RANKING PELANGGARAN (FITUR BARU)
+// =============================================================================
+
+function tampilkanLaporanRanking() {
+    const dariBulan = document.getElementById('laporanDariBulan').value;
+    const dariTahun = parseInt(document.getElementById('laporanDariTahun').value);
+    const sampaiBulan = document.getElementById('laporanSampaiBulan').value;
+    const sampaiTahun = parseInt(document.getElementById('laporanSampaiTahun').value);
+
+    if (!dariBulan || !dariTahun || !sampaiBulan || !sampaiTahun) {
+        showAlert('Rentang waktu harus diisi lengkap!', 'danger');
+        return;
+    }
+
+    const startDate = new Date(dariTahun, dariBulan - 1, 1);
+    const endDate = new Date(sampaiTahun, sampaiBulan - 1, 1);
+
+    if (startDate > endDate) {
+        showAlert('Tanggal mulai tidak boleh lebih besar dari tanggal selesai!', 'danger');
+        return;
+    }
+
+    const reportData = {};
+
+    const violationCountsTemplate = {};
+    violationTypes.forEach(vt => {
+        violationCountsTemplate[vt.name] = 0;
+    });
+
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const monthLabel = currentDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
+
+        const monthlyCounts = { ...violationCountsTemplate };
+
+        violations.forEach(v => {
+            const violationDate = new Date(v.date);
+            if (violationDate.getFullYear() === year && violationDate.getMonth() === month) {
+                if (monthlyCounts.hasOwnProperty(v.typeName)) {
+                    monthlyCounts[v.typeName]++;
+                }
+            }
+        });
+
+        const sortedViolations = Object.entries(monthlyCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+
+        reportData[monthLabel] = sortedViolations;
+
+        currentDate.setMonth(month + 1);
+    }
+
+    renderRankingTable(reportData);
+}
+
+function renderRankingTable(reportData) {
+    const tbody = document.querySelector('#rankingTable tbody');
+    tbody.innerHTML = '';
+
+    const monthLabels = Object.keys(reportData);
+    if (monthLabels.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Tidak ada data untuk ditampilkan pada rentang waktu ini.</td></tr>`;
+        return;
+    }
+
+    monthLabels.forEach(monthLabel => {
+        const violations = reportData[monthLabel];
+        let isFirstRowForMonth = true;
+
+        violations.forEach(v => {
+            const tr = document.createElement('tr');
+            
+            const monthCell = isFirstRowForMonth ? 
+                `<td rowspan="${violations.length}" style="vertical-align: middle; font-weight: bold;">${monthLabel}</td>` : '';
+
+            tr.innerHTML = `
+                ${monthCell}
+                <td>${v.name}</td>
+                <td><span class="badge bg-${v.count > 10 ? 'danger' : v.count > 0 ? 'warning' : 'secondary'}">${v.count}</span></td>
+            `;
+            tbody.appendChild(tr);
+            isFirstRowForMonth = false;
+        });
+    });
+}
+
+function backupRankingPDF() {
+    // Pastikan library html2canvas sudah dimuat
+    if (typeof html2canvas === 'undefined') {
+        showAlert('Library html2canvas tidak ditemukan. Pastikan koneksi internet Anda stabil dan coba lagi.', 'danger');
+        return;
+    }
+
+    const rankingTableElement = document.getElementById('rankingTable');
+    if (!rankingTableElement || rankingTableElement.querySelector('tbody').innerHTML.includes('Klik tombol')) {
+        showAlert('Tampilkan ranking terlebih dahulu sebelum backup PDF!', 'warning');
+        return;
+    }
+
+    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
+    const dariBulan = document.getElementById('laporanDariBulan').value;
+    const dariTahun = document.getElementById('laporanDariTahun').value;
+    const sampaiBulan = document.getElementById('laporanSampaiBulan').value;
+    const sampaiTahun = document.getElementById('laporanSampaiTahun').value;
+
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const periodeText = `${monthNames[parseInt(dariBulan)-1]} ${dariTahun} - ${monthNames[parseInt(sampaiBulan)-1]} ${sampaiTahun}`;
+
+    const contentToPrint = `
+        <div style="font-family: Times, serif; padding: 20px; background: white;">
+            <div style="text-align:center; margin-bottom: 20px;">
+                ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:80px; height:auto;">` : ''}
+                <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+                <p>${escapeHtml(schoolInfo.address || '')}</p>
+                <hr>
+                <h3>Laporan Ranking Pelanggaran per Bulan</h3>
+                <p>Periode: ${periodeText}</p>
+            </div>
+            ${rankingTableElement.outerHTML}
+        </div>
+    `;
+
+    showAlert('Sedang membuat PDF...', 'info', 10000);
+
+    // Buat elemen div sementara
+    const tempElement = document.createElement('div');
+    tempElement.innerHTML = contentToPrint;
+    // Sembunyikan elemen di luar layar
+    tempElement.style.position = 'absolute';
+    tempElement.style.left = '-9999px';
+    tempElement.style.top = '0';
+    tempElement.style.background = 'white'; // Penting untuk html2canvas
+    document.body.appendChild(tempElement);
+
+    // Gunakan setTimeout untuk memberi jeda waktu bagi browser merender elemen
+    setTimeout(() => {
+        html2canvas(tempElement, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            allowTaint: true,
+            backgroundColor: '#ffffff' // Pastikan background putih
+        }).then(canvas => {
+            // Hapus elemen sementara setelah canvas dibuat
+            document.body.removeChild(tempElement);
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 295;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+            
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            
+            const fileName = `laporan_ranking_pelanggaran_${new Date().toISOString().split('T')[0]}.pdf`;
+            pdf.save(fileName);
+            showAlert('PDF Ranking berhasil dibuat dan diunduh!', 'success');
+        }).catch(error => {
+            // Hapus elemen sementara juga jika terjadi error
+            if (document.body.contains(tempElement)) {
+                document.body.removeChild(tempElement);
+            }
+            console.error('Error creating PDF:', error);
+            showAlert('Gagal membuat PDF. Kesalahan: ' + error.message, 'danger');
+        });
+    }, 200); // Jeda 200 milidetik
+}
+
+// =============================================================================
+// 12. INITIALIZATION
+// =============================================================================
+document.addEventListener('DOMContentLoaded', function() {
+    loadSchoolInfo();
+    loadStudents();
+    loadViolations();
+    loadViolationTypes();
+    
+    fixStudentData();
+    
+    document.getElementById('viDate').value = new Date().toISOString().split('T')[0];
+    
+    showPage('identitas');
+    
+    if (window.innerWidth < 992) {
+        sidebar.classList.add('collapsed');
+    } else {
+        sidebar.classList.remove('collapsed');
+    }
+});
+</script>
+</body>
+</html>
