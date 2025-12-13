@@ -10,7 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  
+      
   <style>
     :root{--brand:#0d6efd;--muted:#6c757d;--yellow-bg:#fff9c4}
     body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:#f5f7fb; font-size: 0.9rem;}
@@ -21,6 +21,8 @@
     .sidebar .menu{padding:8px 12px}
     .sidebar .menu a{display:flex;justify-content:space-between;align-items:center;color:#fff;text-decoration:none;padding:8px;border-radius:6px}
     .sidebar .menu a:hover{background:rgba(255,255,255,0.06)}
+    .sidebar .submenu { padding-left: 20px; }
+    .sidebar .submenu a { font-size: 0.85rem; padding: 6px; }
     .sidebar .school-info{padding:12px;background:rgba(255,255,255,0.03);margin:8px;border-radius:8px}
     .sidebar.collapsed{transform:translateX(-280px)}
     .main{flex:1;padding:10px;}
@@ -40,17 +42,7 @@
     
     .form-control, .form-select { background-color: var(--yellow-bg); }
     
-    @media print {
-        .sidebar, .topbar, .btn, .no-print { display: none !important; }
-        .main { padding: 0; margin: 0; }
-        .card { box-shadow: none; border: none; }
-        body { background: white; color: black; }
-        table { page-break-inside: auto; }
-        tr { page-break-inside: avoid; page-break-after: auto; }
-        thead { display: table-header-group; }
-        tfoot { display: table-footer-group; }
-    }
-    
+    /* CSS untuk tampilan layar (tidak diubah) */
     @media(max-width:768px) {
         body { font-size: 0.85rem; }
         .main { padding: 8px; }
@@ -73,7 +65,262 @@
     }
     
     .action-buttons { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
-    .section-divider { border-top: 1px solid #dee2e6; margin-top: 1.5rem; margin-bottom: 1rem; padding-top: 1rem; }
+    .section-divider { border-top: 1px solid #dee2e6; margin-top: 1.5rem; margin-bottom: 1rem; }
+    
+    /* ============================================================= */
+    /* CSS KHUSUS UNTUK MEDIA CETAK - DIOPTIMALKAN UNTUK KERTAS A4 */
+    /* ============================================================= */
+    @media print {
+        /* Reset ukuran kertas ke A4 dengan margin yang sesuai */
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        
+        /* Sembunyikan elemen-elemen yang tidak perlu dicetak */
+        .sidebar,
+        .topbar,
+        .btn,
+        .no-print,
+        .hamburger,
+        .alert-area,
+        .modal,
+        .search-dropdown,
+        .action-buttons,
+        .btn-group,
+        .form-control,
+        .form-select,
+        input[type="file"],
+        input[type="date"],
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        label,
+        .card-header .btn,
+        .pagination,
+        .nav,
+        .navbar,
+        footer,
+        .breadcrumb,
+        .badge.bg-secondary,
+        .btn-outline-secondary,
+        .btn-outline-primary,
+        .btn-outline-success,
+        .btn-outline-danger,
+        .btn-outline-info,
+        .btn-outline-warning,
+        .btn-outline-light,
+        .btn-outline-dark,
+        .btn-sm,
+        .btn-group-sm {
+            display: none !important;
+        }
+        
+        /* Reset body untuk cetak */
+        body {
+            font-family: 'Times New Roman', Times, serif !important;
+            font-size: 11pt !important;
+            line-height: 1.4 !important;
+            color: #000 !important;
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
+        
+        /* Main container untuk cetak */
+        .main {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+        }
+        
+        /* Card styling untuk cetak */
+        .card {
+            box-shadow: none !important;
+            border: none !important;
+            margin-bottom: 0 !important;
+            page-break-inside: avoid;
+            background: transparent !important;
+        }
+        
+        .card-body {
+            padding: 0 !important;
+        }
+        
+        /* Typography untuk cetak */
+        h1, h2, h3, h4, h5, h6 {
+            font-size: 11pt !important;
+            font-weight: bold !important;
+            margin: 10pt 0 !important;
+            color: #000 !important;
+            page-break-after: avoid;
+        }
+        
+        h1 { font-size: 14pt !important; text-align: center !important; }
+        h2 { font-size: 13pt !important; text-align: center !important; }
+        h3 { font-size: 12pt !important; text-align: center !important; }
+        
+        p {
+            font-size: 11pt !important;
+            margin: 5pt 0 !important;
+            color: #000 !important;
+        }
+        
+        /* Tabel styling untuk cetak - dioptimalkan untuk A4 */
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin: 10pt 0 !important;
+            font-size: 11pt !important;
+            page-break-inside: auto;
+        }
+        
+        th, td {
+            border: 1px solid #000 !important;
+            padding: 4pt 6pt !important;
+            font-size: 11pt !important;
+            text-align: left !important;
+            vertical-align: top !important;
+            color: #000 !important;
+            background: transparent !important;
+        }
+        
+        th {
+            font-weight: bold !important;
+            text-align: center !important;
+            background-color: #f5f5f5 !important;
+        }
+        
+        /* Header tabel */
+        thead {
+            display: table-header-group !important;
+        }
+        
+        /* Footer tabel */
+        tfoot {
+            display: table-footer-group !important;
+        }
+        
+        /* Baris tabel */
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        
+        /* Alternating row colors untuk readability */
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9 !important;
+        }
+        
+        /* Badge styling untuk cetak */
+        .badge {
+            padding: 2pt 4pt !important;
+            font-size: 9pt !important;
+            border: 1px solid #000 !important;
+            background: transparent !important;
+            color: #000 !important;
+        }
+        
+        /* Container khusus untuk konten yang dicetak */
+        #rekapPelanggaran,
+        #rekapArea,
+        .letter-wrapper,
+        .print-content {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 11pt !important;
+        }
+        
+        /* Logo sekolah untuk cetak */
+        img[src*="logo"] {
+            max-width: 80px !important;
+            height: auto !important;
+            display: block !important;
+            margin: 0 auto 10pt !important;
+        }
+        
+        /* Signature area */
+        .signature-area {
+            margin-top: 30pt !important;
+            text-align: center !important;
+        }
+        
+        /* Text alignment helpers */
+        .text-center { text-align: center !important; }
+        .text-right { text-align: right !important; }
+        .text-left { text-align: left !important; }
+        
+        /* Spacing helpers */
+        .mt-20 { margin-top: 20pt !important; }
+        .mt-30 { margin-top: 30pt !important; }
+        .mt-40 { margin-top: 40pt !important; }
+        .mb-20 { margin-bottom: 20pt !important; }
+        .mb-30 { margin-bottom: 30pt !important; }
+        
+        /* Prevent breaking inside important elements */
+        .no-break {
+            page-break-inside: avoid !important;
+        }
+        
+        /* HR untuk cetak */
+        hr {
+            border: 1px solid #000 !important;
+            margin: 10pt 0 !important;
+        }
+        
+        /* Special styling for report headers */
+        .report-header {
+            text-align: center !important;
+            margin-bottom: 20pt !important;
+        }
+        
+        .report-header h2 {
+            font-size: 14pt !important;
+            margin-bottom: 5pt !important;
+        }
+        
+        .report-header h3 {
+            font-size: 12pt !important;
+            margin: 15pt 0 !important;
+        }
+        
+        /* Table container */
+        .table-container {
+            margin: 15pt 0 !important;
+        }
+        
+        /* Ensure content fits within A4 width */
+        * {
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* Fix for Bootstrap's grid system in print */
+        .row {
+            display: block !important;
+            width: 100% !important;
+        }
+        
+        .col-* {
+            float: none !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none !important;
+        }
+        
+        /* Ensure no overflow */
+        html, body {
+            overflow: visible !important;
+        }
+    }
   </style>
 </head>
 <body>
@@ -101,7 +348,11 @@
         <a href="#" onclick="showPage('data_siswa')">Data Siswa <span>›</span></a>
         <a href="#" onclick="showPage('pelanggaran')">Pelanggaran <span>›</span></a>
         <a href="#" onclick="showPage('rekap_pelanggaran')">Rekap Pelanggaran <span>›</span></a>
-        <a href="#" onclick="showPage('laporan')">Laporan <span>›</span></a>
+        <a href="#" onclick="toggleLaporanSubmenu(event)">Laporan <span>▼</span></a>
+        <div id="laporanSubmenu" class="submenu" style="display: none;">
+          <a href="#" onclick="showPage('laporan_ranking')">Ranking Pelanggaran <span>›</span></a>
+          <a href="#" onclick="showPage('laporan_tren')">Tren Pelanggaran <span>›</span></a>
+        </div>
         <a href="#" onclick="showPage('pengaturan')">Pengaturan <span>›</span></a>
       </div>
     </nav>
@@ -235,7 +486,87 @@
       </div>
     </div>
 
-    <div id="page_laporan" class="page d-none">
+    <!-- Halaman Laporan Ranking -->
+    <div id="page_laporan_ranking" class="page d-none">
+      <div class="card p-3 mb-3">
+        <h6>Laporan Ranking Pelanggaran Siswa</h6>
+        <div class="small-muted mb-2">Menampilkan ranking pelanggaran siswa dari total poin tertinggi hingga terendah.</div>
+        
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label">Periode</label>
+            <select id="rankingPeriod" class="form-select" onchange="handleRankingPeriodChange()">
+              <option value="semester-1">Semester 1</option>
+              <option value="semester-2">Semester 2</option>
+              <option value="tahunan">Tahunan</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          
+          <div class="col-md-3" id="rankingCustomStart" style="display: none;">
+            <label class="form-label">Dari Bulan</label>
+            <select id="rankingDariBulan" class="form-select"></select>
+          </div>
+          
+          <div class="col-md-2" id="rankingCustomStartYear" style="display: none;">
+            <label class="form-label">Tahun</label>
+            <input type="number" id="rankingDariTahun" class="form-control" min="2020" max="2030">
+          </div>
+          
+          <div class="col-md-3" id="rankingCustomEnd" style="display: none;">
+            <label class="form-label">Sampai Bulan</label>
+            <select id="rankingSampaiBulan" class="form-select"></select>
+          </div>
+          
+          <div class="col-md-2" id="rankingCustomEndYear" style="display: none;">
+            <label class="form-label">Tahun</label>
+            <input type="number" id="rankingSampaiTahun" class="form-control" min="2020" max="2030">
+          </div>
+          
+          <div class="col-md-3">
+            <label class="form-label">Filter Kelas (opsional)</label>
+            <select id="rankingKelas" class="form-select">
+              <option value="">Semua Kelas</option>
+            </select>
+          </div>
+          
+          <div class="col-md-12 text-end mt-2">
+            <div class="action-buttons justify-content-end">
+              <button class="btn btn-primary" onclick="tampilkanRankingSiswa()">Tampilkan Ranking</button>
+              <button class="btn btn-success" onclick="cetakRankingSiswa()">Cetak Ranking</button>
+              <button class="btn btn-info" onclick="backupRankingSiswaPDF()">Backup PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card p-3">
+        <h6>Hasil Ranking Pelanggaran</h6>
+        <div style="max-height: 500px; overflow: auto;">
+          <table class="table table-sm" id="rankingSiswaTable">
+            <thead class="table-light">
+              <tr>
+                <th>Rank</th>
+                <th>NIS</th>
+                <th>Nama Siswa</th>
+                <th>Kelas</th>
+                <th>Jumlah Pelanggaran</th>
+                <th>Total Poin</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="7" class="text-center text-muted">Klik tombol "Tampilkan Ranking" untuk melihat data.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Halaman Laporan Tren -->
+    <div id="page_laporan_tren" class="page d-none">
       <div class="card p-3 mb-3">
         <h6>Laporan Tren Pelanggaran</h6>
         <div class="small-muted mb-2">Analisis tren pelanggaran dari waktu ke waktu dengan grafik.</div>
@@ -304,33 +635,6 @@
                     </tr>
                 </thead>
                 <tbody></tbody>
-            </table>
-        </div>
-      </div>
-
-      <!-- FITUR BARU: LAPORAN RANKING -->
-      <div class="card p-3 mt-3">
-        <h6>Laporan Ranking Pelanggaran per Bulan</h6>
-        <div class="small-muted mb-2">Menampilkan ranking jenis pelanggaran terbanyak hingga terkecil untuk setiap bulan dalam periode yang dipilih.</div>
-        <div class="action-buttons">
-            <button class="btn btn-primary" onclick="tampilkanLaporanRanking()">Tampilkan Ranking</button>
-            <button class="btn btn-info" onclick="backupRankingPDF()">Backup PDF (Ranking)</button>
-        </div>
-        
-        <div class="mt-3" style="max-height: 400px; overflow: auto;">
-            <table class="table table-sm" id="rankingTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Bulan</th>
-                        <th>Jenis Pelanggaran</th>
-                        <th>Jumlah Kasus</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="3" class="text-center text-muted">Klik tombol "Tampilkan Ranking" untuk melihat data.</td>
-                    </tr>
-                </tbody>
             </table>
         </div>
       </div>
@@ -429,6 +733,24 @@
   </div>
 </div>
 
+<!-- Detail Pelanggaran Modal -->
+<div class="modal fade" id="detailPelanggaranModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detail Pelanggaran Siswa</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="detailPelanggaranContent"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -451,7 +773,7 @@ let students = [
 { nis: '0102522253', nama: 'RADITYA DANU PRATAMA', kelas: 'X (Sepuluh)', ortu: 'Gatot Suherman', photo: 'https://picsum.photos/seed/0102522253/40/40.jpg' },
 { nis: '0102235604', nama: 'RIDHO FIRMANSYAH', kelas: 'X (Sepuluh)', ortu: 'SUNTORO', photo: 'https://picsum.photos/seed/0102235604/40/40.jpg' },
 { nis: '0099798429', nama: 'RIZKI CAHYO SUGENG WIBOWO', kelas: 'X (Sepuluh)', ortu: 'MISIYO', photo: 'https://picsum.photos/seed/0099798429/40/40.jpg' },
-{ nis: '0000000000', nama: 'RIZAL ABDUL HAQ', kelas: 'X (Sepuluh)', ortu: 'Suhirno', photo: 'https://picsum.photos/seed/0000000000/40/40.jpg' },
+{ nis: '0000000316', nama: 'RIZAL ABDUL HAQ', kelas: 'X (Sepuluh)', ortu: 'Suhirno', photo: 'https://picsum.photos/seed/0000000000/40/40.jpg' },
 { nis: '0106667835', nama: 'SAFA AULIA PUTRI', kelas: 'X (Sepuluh)', ortu: 'Jumidi', photo: 'https://picsum.photos/seed/0106667835/40/40.jpg' },
 { nis: '0105199297', nama: 'SHINTA SASTYA WATI', kelas: 'X (Sepuluh)', ortu: 'Ah.Suyani', photo: 'https://picsum.photos/seed/0105199297/40/40.jpg' },
 { nis: '3106050813', nama: 'TIYAS FARIDA SARI', kelas: 'X (Sepuluh)', ortu: 'Ah. Mutaqin', photo: 'https://picsum.photos/seed/3106050813/40/40.jpg' },
@@ -460,13 +782,13 @@ let students = [
 
 { nis: '0084903816', nama: 'Ahmad Iqbal', kelas: 'XI (Sebelas)', ortu: 'Paimin', photo: 'https://picsum.photos/seed/0084903816/40/40.jpg' },
 { nis: '0088606301', nama: 'Ahmad Ramadhani', kelas: 'XI (Sebelas)', ortu: 'Slamet Wahyudi', photo: 'https://picsum.photos/seed/0088606301/40/40.jpg' },
-{ nis: '0000000000', nama: 'Argi Setiawan', kelas: 'XI (Sebelas)', ortu: 'Sukirno', photo: 'https://picsum.photos/seed/ArgiSetiawan/40/40.jpg' },
+{ nis: '1000000001', nama: 'Argi Setiawan', kelas: 'XI (Sebelas)', ortu: 'Sukirno', photo: 'https://picsum.photos/seed/ArgiSetiawan/40/40.jpg' },
 { nis: '0081098360', nama: 'Aisyah Lu\'lu\'ul Husna', kelas: 'XI (Sebelas)', ortu: 'Maryono', photo: 'https://picsum.photos/seed/0081098360/40/40.jpg' },
 { nis: '0095627591', nama: 'Anggun Puspita Anggraini', kelas: 'XI (Sebelas)', ortu: 'Sariyono', photo: 'https://picsum.photos/seed/0095627591/40/40.jpg' },
 { nis: '0089314202', nama: 'Dafa', kelas: 'XI (Sebelas)', ortu: 'Sudarmaji', photo: 'https://picsum.photos/seed/0089314202/40/40.jpg' },
 { nis: '0091007309', nama: 'Devita Anjani', kelas: 'XI (Sebelas)', ortu: 'Budi Wahyono', photo: 'https://picsum.photos/seed/0091007309/40/40.jpg' },
-{ nis: '0000000000', nama: 'Ferdi Kurniawan', kelas: 'XI (Sebelas)', ortu: 'Mukani', photo: 'https://picsum.photos/seed/FerdiKurniawan/40/40.jpg' },
-{ nis: '0000000000', nama: 'Fitra Afriza', kelas: 'XI (Sebelas)', ortu: 'Wasito', photo: 'https://picsum.photos/seed/FitraAfriza/40/40.jpg' },
+{ nis: '2000000002', nama: 'Ferdi Kurniawan', kelas: 'XI (Sebelas)', ortu: 'Mukani', photo: 'https://picsum.photos/seed/FerdiKurniawan/40/40.jpg' },
+{ nis: '3000000003', nama: 'Fitra Afriza', kelas: 'XI (Sebelas)', ortu: 'Wasito', photo: 'https://picsum.photos/seed/FitraAfriza/40/40.jpg' },
 { nis: '0084423897', nama: 'Indah Kasturi Kusuma Putri', kelas: 'XI (Sebelas)', ortu: 'Ahmad Sabidin', photo: 'https://picsum.photos/seed/0084423897/40/40.jpg' },
 { nis: '0098669866', nama: 'Lefiyana Juwita', kelas: 'XI (Sebelas)', ortu: 'Ponirin', photo: 'https://picsum.photos/seed/0098669866/40/40.jpg' },
 { nis: '0085606025', nama: 'Marchfel Firdiyansah', kelas: 'XI (Sebelas)', ortu: 'Supriyadi', photo: 'https://picsum.photos/seed/0085606025/40/40.jpg' },
@@ -475,7 +797,7 @@ let students = [
 { nis: '0074048074', nama: 'Mohamad Ibnu Rosid', kelas: 'XI (Sebelas)', ortu: 'Parman', photo: 'https://picsum.photos/seed/0074048074/40/40.jpg'},
 { nis: '0083168310', nama: 'M.Bisma Mega Nanda', kelas: 'XI (Sebelas)', ortu: 'Suratman', photo: 'https://picsum.photos/seed/0083168310/40/40.jpg' },
 { nis: '0095212808', nama: 'M.Rizki Ramadhani', kelas: 'XI (Sebelas)', ortu: 'Syamsuri', photo: 'https://picsum.photos/seed/0095212808/40/40.jpg' },
-{ nis: '0000000000', nama: 'M.Fiki Darmawan', kelas: 'XI (Sebelas)', ortu: 'Basar', photo: 'https://picsum.photos/seed/MFikiDarmawan/40/40.jpg' },
+{ nis: '0000000004', nama: 'M.Fiki Darmawan', kelas: 'XI (Sebelas)', ortu: 'Basar', photo: 'https://picsum.photos/seed/MFikiDarmawan/40/40.jpg' },
 { nis: '3095650322', nama: 'M.Badru Muwafaq', kelas: 'XI (Sebelas)', ortu: 'M.Idris', photo: 'https://picsum.photos/seed/3095650322/40/40.jpg' },
 { nis: '0095475420', nama: 'Rima', kelas: 'XI (Sebelas)', ortu: 'Basuki', photo: 'https://picsum.photos/seed/0095475420/40/40.jpg' },
 { nis: '0095395423', nama: 'Rima Ulvania', kelas: 'XI (Sebelas)', ortu: 'Ahmad Darmadi', photo: 'https://picsum.photos/seed/0095395423/40/40.jpg' },
@@ -483,13 +805,13 @@ let students = [
 { nis: '0064036686', nama: 'Siti Miftakhul Makmuroh', kelas: 'XI (Sebelas)', ortu: 'Nur Ngali', photo: 'https://picsum.photos/seed/0064036686/40/40.jpg' },
 { nis: '0091403540', nama: 'Tomi Jadmiko', kelas: 'XI (Sebelas)', ortu: 'Tentrem Sutejo', photo: 'https://picsum.photos/seed/0091403540/40/40.jpg' },
 { nis: '0086855084', nama: 'Tia Dwi Saputri', kelas: 'XI (Sebelas)', ortu: 'Sudarno', photo: 'https://picsum.photos/seed/0086855084/40/40.jpg' },
-{ nis: '0000000000', nama: 'Wafiq Khariri', kelas: 'XI (Sebelas)', ortu: 'M.Sholikin', photo: 'https://picsum.photos/seed/WafiqKhariri/40/40.jpg' },
+{ nis: '0000000005', nama: 'Wafiq Khariri', kelas: 'XI (Sebelas)', ortu: 'M.Sholikin', photo: 'https://picsum.photos/seed/WafiqKhariri/40/40.jpg' },
 { nis: '0095475420', nama: 'Yeni Winarni', kelas: 'XI (Sebelas)', ortu: 'Hermawan', photo: 'https://picsum.photos/seed/0095475420/40/40.jpg' },
-{ nis: '0000000000', nama: 'Ainun Nadhiroh', kelas: 'XI (Sebelas)', ortu: 'Ahmad Sukirno', photo: 'https://picsum.photos/seed/AinunNadhiroh/40/40.jpg' },
+{ nis: '0000000006', nama: 'Ainun Nadhiroh', kelas: 'XI (Sebelas)', ortu: 'Ahmad Sukirno', photo: 'https://picsum.photos/seed/AinunNadhiroh/40/40.jpg' },
 { nis: '0098781514', nama: 'Habibatus Zakia', kelas: 'XI (Sebelas)', ortu: 'Mastur Supriyanto', photo: 'https://picsum.photos/seed/0098781514/40/40.jpg' },
 { nis: '3096763981', nama: 'Dwi Fatimah', kelas: 'XI (Sebelas)', ortu: 'Sugiarto', photo: 'https://picsum.photos/seed/3096763981/40/40.jpg' },
 { nis: '3085136071', nama: 'M.Akbar Panjalu', kelas: 'XI (Sebelas)', ortu: 'Imam Mashuri', photo: 'https://picsum.photos/seed/3085136071/40/40.jpg' },
-{ nis: '0000000000', nama: 'Angga Dwi Saputra', kelas: 'XI (Sebelas)', ortu: 'Muhlasin', photo: 'https://picsum.photos/seed/AnggaDwiSaputra/40/40.jpg' },
+{ nis: '0000000007', nama: 'Angga Dwi Saputra', kelas: 'XI (Sebelas)', ortu: 'Muhlasin', photo: 'https://picsum.photos/seed/AnggaDwiSaputra/40/40.jpg' },
 
 { nis: '0077667204', nama: 'Ahmad Maulana', kelas: 'XII (dua Belas)', ortu: 'Wagiman', photo: 'https://picsum.photos/seed/0077667204/40/40.jpg' },
 { nis: '0085214724', nama: 'Aliya Ayu Marlina', kelas: 'XII (dua Belas)', ortu: 'Kasiman', photo: 'https://picsum.photos/seed/0085214724/40/40.jpg' },
@@ -505,7 +827,7 @@ let students = [
 { nis: '0083708627', nama: 'Endra Saputra', kelas: 'XII (dua Belas)', ortu: 'Darwanto', photo: 'https://picsum.photos/seed/0083708627/40/40.jpg' },
 { nis: '0081159769', nama: 'Farid Ahmad Faisal', kelas: 'XII (dua Belas)', ortu: 'Sutarmin', photo: 'https://picsum.photos/seed/0081159769/40/40.jpg' },
 { nis: '0084757704', nama: 'Maulana Dava', kelas: 'XII (dua Belas)', ortu: 'Muh Makruf', photo: 'https://picsum.photos/seed/0084757704/40/40.jpg' },
-{ nis: '0000000000', nama: 'Maya Safitri', kelas: 'XII (dua Belas)', ortu: 'Paiman', photo: 'https://picsum.photos/seed/MayaSafitri/40/40.jpg' },
+{ nis: '0000000008', nama: 'Maya Safitri', kelas: 'XII (dua Belas)', ortu: 'Paiman', photo: 'https://picsum.photos/seed/MayaSafitri/40/40.jpg' },
 { nis: '0077167251', nama: 'Miranti', kelas: 'XII (dua Belas)', ortu: 'Sunardi', photo: 'https://picsum.photos/seed/0077167251/40/40.jpg' },
 { nis: '0072775329', nama: 'Muhammad Aldino Ama Rasya', kelas: 'XII (dua Belas)', ortu: 'Tarmidi', photo: 'https://picsum.photos/seed/0072775329/40/40.jpg' },
 { nis: '0082727230', nama: 'Muhammad Ahya', kelas: 'XII (dua Belas)', ortu: 'Nurwadi', photo: 'https://picsum.photos/seed/0082727230/40/40.jpg' },
@@ -514,17 +836,17 @@ let students = [
 { nis: '0089726548', nama: 'Muhammad Rejaki', kelas: 'XII (dua Belas)', ortu: 'Ahmad Ribud', photo: 'https://picsum.photos/seed/0089726548/40/40.jpg' },
 { nis: '0077347477', nama: 'Mohammad Sulton Al-azhar', kelas: 'XII (dua Belas)', ortu: 'Sayudi', photo: 'https://picsum.photos/seed/0077347477/40/40.jpg' },
 { nis: '0085214724', nama: 'Nanda Ayu Ningsih', kelas: 'XII (dua Belas)', ortu: 'Kusnan', photo: 'https://picsum.photos/seed/0085214724/40/40.jpg' },
-{ nis: '0000000000', nama: 'Nayla Amin', kelas: 'XII (dua Belas)', ortu: 'Sumarni', photo: 'https://picsum.photos/seed/NaylaAmin/40/40.jpg' },
+{ nis: '0000000012', nama: 'Nayla Amin', kelas: 'XII (dua Belas)', ortu: 'Sumarni', photo: 'https://picsum.photos/seed/NaylaAmin/40/40.jpg' },
 { nis: '0071174694', nama: 'Rahma Wulandari', kelas: 'XII (dua Belas)', ortu: 'Maryono', photo: 'https://picsum.photos/seed/0071174694/40/40.jpg' },
 { nis: '0084479963', nama: 'Rendi Hidayat', kelas: 'XII (dua Belas)', ortu: 'Yarkoni', photo: 'https://picsum.photos/seed/0084479963/40/40.jpg' },
 { nis: '0088343077', nama: 'Sahal Wahyudin', kelas: 'XII (dua Belas)', ortu: 'Suhadak', photo: 'https://picsum.photos/seed/0088343077/40/40.jpg' },
-{ nis: '0000000000', nama: 'Shera Aurelia Sariana', kelas: 'XII (dua Belas)', ortu: 'Muhamat Nurkholiq', photo: 'https://picsum.photos/seed/SheraAurelia/40/40.jpg' },
+{ nis: '0000000009', nama: 'Shera Aurelia Sariana', kelas: 'XII (dua Belas)', ortu: 'Muhamat Nurkholiq', photo: 'https://picsum.photos/seed/SheraAurelia/40/40.jpg' },
 { nis: '0070226573', nama: 'Sulamanul Jamal', kelas: 'XII (dua Belas)', ortu: 'Untung Chasbulloh', photo: 'https://picsum.photos/seed/0070226573/40/40.jpg' },
 { nis: '0075282696', nama: 'Tiara Saputri', kelas: 'XII (dua Belas)', ortu: 'Samukri', photo: 'https://picsum.photos/seed/0075282696/40/40.jpg' },
 { nis: '0084034253', nama: 'Wahyuni Naila Ngilma', kelas: 'XII (dua Belas)', ortu: 'Sarengat', photo: 'https://picsum.photos/seed/0084034253/40/40.jpg' },
 { nis: '0087602782', nama: 'Laura Meliyana Dewi', kelas: 'XII (dua Belas)', ortu: 'Muhamat Asngadi', photo: 'https://picsum.photos/seed/0087602782/40/40.jpg' },
-{ nis: '0000000000', nama: 'EKO NUZULUL MISBAH', kelas: 'XII (dua Belas)', ortu: '', photo: 'https://picsum.photos/seed/EkoNuzulul/40/40.jpg' },
-{ nis: '0000000000', nama: 'MUHAMAD KHOIRUR ROZIKIN', kelas: 'XII (dua Belas)', ortu: '', photo: 'https://picsum.photos/seed/MuhamadKhoirurRozikin/40/40.jpg' },
+{ nis: '0000000010', nama: 'EKO NUZULUL MISBAH', kelas: 'XII (dua Belas)', ortu: '', photo: 'https://picsum.photos/seed/EkoNuzulul/40/40.jpg' },
+{ nis: '0000000011', nama: 'MUHAMAD KHOIRUR ROZIKIN', kelas: 'XII (dua Belas)', ortu: '', photo: 'https://picsum.photos/seed/MuhamadKhoirurRozikin/40/40.jpg' },
 ];
 let violationTypes = [ 
     {id:1,name:'Terlambat',points:5}, 
@@ -537,15 +859,9 @@ let violationTypes = [
     {id:8,name:'Tidak Ikut Kegiatan Sekolah',points:10},
     {id:9,name:'Berkelahi sesama teman sekolah',points:20}
 ];
-let violations = [
-    {id:1,studentNis:'0094789075',studentName:'ADI SAPUTRA',studentClass:'X (Sepuluh)',typeId:1,typeName:'Terlambat',points:5,date:'2024-02-05',note:'Terlambat 15 menit'},
-    {id:2,studentNis:'0096019190',studentName:'AULIA NUR LAELA',studentClass:'X (Sepuluh)',typeId:2,typeName:'Tidak Pakai Seragam',points:10,date:'2024-02-10',note:'Tidak pakai atribut'},
-    {id:3,studentNis:'0084903816',studentName:'Ahmad Iqbal',studentClass:'XI (Sebelas)',typeId:3,typeName:'Bolos',points:20,date:'2024-02-15',note:'Bolos jam pertama'},
-    {id:4,studentNis:'0077667204',studentName:'Ahmad Maulana',studentClass:'XII (dua Belas)',typeId:1,typeName:'Terlambat',points:5,date:'2024-01-20',note:'Terlambat 10 menit'},
-    {id:5,studentNis:'0094789075',studentName:'ADI SAPUTRA',studentClass:'X (Sepuluh)',typeId:4,typeName:'Bullying',points:30,date:'2024-03-01',note:'Mengganggu teman'},
-];
+let violations = []; // Array kosong, data akan dimuat dari localStorage
 let nextTypeId = 10;
-let nextViolationId = 6;
+let nextViolationId = 1;
 let selectedStudentForViolation = null;
 let selectedStudentForRekap = null;
 let selectedStudentForLaporan = null;
@@ -590,6 +906,18 @@ function getStudentProperty(student, property) {
 const sidebar = document.getElementById('sidebar');
 document.getElementById('btnToggle').addEventListener('click', ()=> sidebar.classList.toggle('collapsed'));
 
+function toggleLaporanSubmenu(event) {
+    event.preventDefault();
+    const submenu = document.getElementById('laporanSubmenu');
+    if (submenu.style.display === 'none') {
+        submenu.style.display = 'block';
+        event.target.innerHTML = 'Laporan <span>▲</span>';
+    } else {
+        submenu.style.display = 'none';
+        event.target.innerHTML = 'Laporan <span>▼</span>';
+    }
+}
+
 function showPage(key){
     document.querySelectorAll('.page').forEach(p=>p.classList.add('d-none'));
     const target = document.getElementById('page_'+key);
@@ -599,7 +927,8 @@ function showPage(key){
         data_siswa: 'Data Siswa',
         pelanggaran: 'Pencatatan Pelanggaran',
         rekap_pelanggaran: 'Rekap Pelanggaran',
-        laporan: 'Laporan Tren Pelanggaran',
+        laporan_ranking: 'Laporan Ranking Pelanggaran',
+        laporan_tren: 'Laporan Tren Pelanggaran',
         pengaturan: 'Pengaturan'
     };
     document.getElementById('pageTitle').textContent = titles[key] || 'Aplikasi';
@@ -616,7 +945,10 @@ function showPage(key){
     } else if (key === 'rekap_pelanggaran') {
         populateClassDropdown();
     } 
-    else if (key === 'laporan') {
+    else if (key === 'laporan_ranking') {
+        initializeRankingPage();
+    }
+    else if (key === 'laporan_tren') {
         initializeLaporanPage();
     }
     else if (key === 'pengaturan') {
@@ -972,7 +1304,9 @@ function loadViolations(){
             nextViolationId = Math.max(...violations.map(v => v.id || 0)) + 1;
         }
     } else {
-        saveViolations();
+        // JANGAN simpan data dari script ke localStorage saat pertama kali load
+        // violations tetap menggunakan data dari script sebagai sampel
+        // Tapi tidak disimpan ke localStorage
     }
 }
 
@@ -1369,37 +1703,37 @@ function renderRekapPerSiswa(area) {
         .sort((a, b) => new Date(a.date) - new Date(b.date));
     
     let content = `
-    <div id="rekapPelanggaran" style="font-family: Times, serif; line-height:1.5; padding:18px;">
-      <div style="text-align:center; margin-bottom:8px;">
+    <div id="rekapPelanggaran" class="print-content" style="font-family: Times, serif; line-height:1.5; padding:18px;">
+      <div class="report-header">
         ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:90px; height:auto; margin-bottom:5px;">` : ''}
-        <h2 style="margin:0;">${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
-        <p style="margin:0;">${escapeHtml(schoolInfo.address || '')}</p>
-        <hr style="border:1px solid #000; margin-top:10px;">
+        <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+        <p>${escapeHtml(schoolInfo.address || '')}</p>
+        <hr>
       </div>
 
-      <h3 style="text-align:center; margin-top:12px; margin-bottom:12px;">REKAP DATA PELANGGARAN PER SISWA</h3>
+      <h3>REKAP DATA PELANGGARAN PER SISWA</h3>
 
-      <table style="width:100%; margin-bottom:12px;">
+      <table class="table-container">
         <tr><td style="width:120px">NIS</td><td>: ${escapeHtml(selectedStudentForRekap.nis)}</td></tr>
         <tr><td>Nama</td><td>: ${escapeHtml(selectedStudentForRekap.nama)}</td></tr>
         <tr><td>Kelas</td><td>: ${escapeHtml(selectedStudentForRekap.kelas||'-')}</td></tr>
       </table>
 
-      <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+      <table class="table-container">
         <thead>
-          <tr style="background:#f5f5f5;"><th style="border:1px solid #ddd; padding:6px;">No</th><th style="border:1px solid #ddd; padding:6px;">Tanggal</th><th style="border:1px solid #ddd; padding:6px;">Jenis Pelanggaran</th><th style="border:1px solid #ddd; padding:6px; text-align:center;">Poin</th><th style="border:1px solid #ddd; padding:6px;">Keterangan</th></tr>
+          <tr><th>No</th><th>Tanggal</th><th>Jenis Pelanggaran</th><th style="text-align:center;">Poin</th><th>Keterangan</th></tr>
         </thead>
         <tbody>`;
     
     let total = 0;
     studentViolations.forEach((v,i)=>{
         total += v.points;
-        content += `<tr><td style="border:1px solid #ddd; padding:6px; text-align:center;">${i+1}</td><td style="border:1px solid #ddd; padding:6px;">${formatDate(v.date)}</td><td style="border:1px solid #ddd; padding:6px;">${escapeHtml(v.typeName)}</td><td style="border:1px solid #ddd; padding:6px; text-align:center;">${v.points}</td><td style="border:1px solid #ddd; padding:6px;">${escapeHtml(v.note||'-')}</td></tr>`;
+        content += `<tr><td style="text-align:center;">${i+1}</td><td>${formatDate(v.date)}</td><td>${escapeHtml(v.typeName)}</td><td style="text-align:center;">${v.points}</td><td>${escapeHtml(v.note||'-')}</td></tr>`;
     });
     
     content += `</tbody></table>`;
-    content += `<div style="text-align:right; font-weight:bold; margin-bottom:24px;">Total Poin: ${total}</div>`;
-    content += `<div style="display:flex; justify-content:space-between; margin-top:40px;">
+    content += `<div class="text-right" style="font-weight:bold; margin-bottom:24px;">Total Poin: ${total}</div>`;
+    content += `<div class="signature-area" style="display:flex; justify-content:space-between; margin-top:40px;">
         <div style="width:45%;">Mengetahui<br>Kepala Sekolah<br><br><br><strong>${escapeHtml(kepala)}</strong></div>
         <div style="width:45%; text-align:right;">${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>Yang membuat,<br><br><br><strong>${escapeHtml(selectedStudentForRekap.nama)}</strong><br>NIS: ${escapeHtml(selectedStudentForRekap.nis)}</div>
       </div>
@@ -1438,26 +1772,26 @@ function renderRekapPerKelas(area) {
     });
     
     let content = `
-    <div id="rekapPelanggaran" style="font-family: Times, serif; line-height:1.5; padding:18px;">
-      <div style="text-align:center; margin-bottom:8px;">
+    <div id="rekapPelanggaran" class="print-content" style="font-family: Times, serif; line-height:1.5; padding:18px;">
+      <div class="report-header">
         ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:90px; height:auto; margin-bottom:5px;">` : ''}
-        <h2 style="margin:0;">${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
-        <p style="margin:0;">${escapeHtml(schoolInfo.address || '')}</p>
-        <hr style="border:1px solid #000; margin-top:10px;">
+        <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+        <p>${escapeHtml(schoolInfo.address || '')}</p>
+        <hr>
       </div>
 
-      <h3 style="text-align:center; margin-top:12px; margin-bottom:12px;">REKAP DATA PELANGGARAN PER KELAS</h3>
-      <h4 style="text-align:center; margin-bottom:12px;">Kelas: ${escapeHtml(selectedClass)}</h4>
-      <p style="text-align:center; margin-bottom:20px;">Periode: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
+      <h3>REKAP DATA PELANGGARAN PER KELAS</h3>
+      <h4>Kelas: ${escapeHtml(selectedClass)}</h4>
+      <p>Periode: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
 
-      <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+      <table class="table-container">
         <thead>
-          <tr style="background:#f5f5f5;">
-            <th style="border:1px solid #ddd; padding:6px;">No</th>
-            <th style="border:1px solid #ddd; padding:6px;">NIS</th>
-            <th style="border:1px solid #ddd; padding:6px;">Nama Siswa</th>
-            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Jumlah Pelanggaran</th>
-            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Total Poin</th>
+          <tr>
+            <th>No</th>
+            <th>NIS</th>
+            <th>Nama Siswa</th>
+            <th style="text-align:center;">Jumlah Pelanggaran</th>
+            <th style="text-align:center;">Total Poin</th>
           </tr>
         </thead>
         <tbody>`;
@@ -1474,12 +1808,12 @@ function renderRekapPerKelas(area) {
         
         content += `
           <tr>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${no++}</td>
-            <td style="border:1px solid #ddd; padding:6px;">${escapeHtml(student.nis)}</td>
-            <td style="border:1px solid #ddd; padding:6px;">${escapeHtml(student.nama)}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${studentViolations.length}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">
-              <span class="badge bg-${totalPoints > 20 ? 'danger' : totalPoints > 10 ? 'warning' : 'success'}">${totalPoints}</span>
+            <td style="text-align:center;">${no++}</td>
+            <td>${escapeHtml(student.nis)}</td>
+            <td>${escapeHtml(student.nama)}</td>
+            <td style="text-align:center;">${studentViolations.length}</td>
+            <td style="text-align:center;">
+              <span class="badge">${totalPoints}</span>
             </td>
           </tr>`;
     });
@@ -1488,9 +1822,9 @@ function renderRekapPerKelas(area) {
         </tbody>
         <tfoot>
           <tr style="background:#f5f5f5; font-weight:bold;">
-            <td colspan="3" style="border:1px solid #ddd; padding:6px; text-align:right;">TOTAL:</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalClassViolations}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalClassPoints}</td>
+            <td colspan="3" style="text-align:right;">TOTAL:</td>
+            <td style="text-align:center;">${totalClassViolations}</td>
+            <td style="text-align:center;">${totalClassPoints}</td>
           </tr>
         </tfoot>
       </table>
@@ -1499,16 +1833,16 @@ function renderRekapPerKelas(area) {
     
     sortedStudents.forEach(({ student, violations: studentViolations }) => {
         content += `
-          <div style="margin-bottom:20px; page-break-inside: avoid;">
-            <h5 style="margin-bottom:10px;">${escapeHtml(student.nama)} (${escapeHtml(student.nis)})</h5>
-            <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+          <div class="no-break" style="margin-bottom:20px;">
+            <h5 style="margin-bottom:10px; background:#f0f0f0; padding:8px; border-radius:4px;">${escapeHtml(student.nama)} (${escapeHtml(student.nis)})</h5>
+            <table class="table-container" style="font-size:0.9em;">
               <thead>
                 <tr style="background:#f9f9f9;">
-                  <th style="border:1px solid #ccc; padding:4px;">No</th>
-                  <th style="border:1px solid #ccc; padding:4px;">Tanggal</th>
-                  <th style="border:1px solid #ccc; padding:4px;">Jenis Pelanggaran</th>
-                  <th style="border:1px solid #ccc; padding:4px; text-align:center;">Poin</th>
-                  <th style="border:1px solid #ccc; padding:4px;">Keterangan</th>
+                  <th>No</th>
+                  <th>Tanggal</th>
+                  <th>Jenis Pelanggaran</th>
+                  <th style="text-align:center;">Poin</th>
+                  <th>Keterangan</th>
                 </tr>
               </thead>
               <tbody>`;
@@ -1516,11 +1850,11 @@ function renderRekapPerKelas(area) {
         studentViolations.forEach((v, i) => {
             content += `
               <tr>
-                <td style="border:1px solid #ccc; padding:4px; text-align:center;">${i+1}</td>
-                <td style="border:1px solid #ccc; padding:4px;">${formatDate(v.date)}</td>
-                <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(v.typeName)}</td>
-                <td style="border:1px solid #ccc; padding:4px; text-align:center;">${v.points}</td>
-                <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(v.note || '-')}</td>
+                <td style="text-align:center;">${i+1}</td>
+                <td>${formatDate(v.date)}</td>
+                <td>${escapeHtml(v.typeName)}</td>
+                <td style="text-align:center;">${v.points}</td>
+                <td>${escapeHtml(v.note || '-')}</td>
               </tr>`;
         });
         
@@ -1531,7 +1865,7 @@ function renderRekapPerKelas(area) {
     });
     
     content += `
-      <div style="display:flex; justify-content:space-between; margin-top:40px;">
+      <div class="signature-area" style="display:flex; justify-content:space-between; margin-top:40px;">
         <div style="width:45%;">Mengetahui<br>Kepala Sekolah<br><br><br><strong>${escapeHtml(kepala)}</strong></div>
         <div style="width:45%; text-align:right;">${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>Waka Kesiswaan,<br><br><br><strong>${escapeHtml(schoolInfo.waka || 'Waka Kesiswaan')}</strong></div>
       </div>
@@ -1572,26 +1906,26 @@ function renderRekapSemua(area) {
     });
     
     let content = `
-    <div id="rekapPelanggaran" style="font-family: Times, serif; line-height:1.5; padding:18px;">
-      <div style="text-align:center; margin-bottom:8px;">
+    <div id="rekapPelanggaran" class="print-content" style="font-family: Times, serif; line-height:1.5; padding:18px;">
+      <div class="report-header">
         ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:90px; height:auto; margin-bottom:5px;">` : ''}
-        <h2 style="margin:0;">${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
-        <p style="margin:0;">${escapeHtml(schoolInfo.address || '')}</p>
-        <hr style="border:1px solid #000; margin-top:10px;">
+        <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+        <p>${escapeHtml(schoolInfo.address || '')}</p>
+        <hr>
       </div>
 
-      <h3 style="text-align:center; margin-top:12px; margin-bottom:12px;">REKAP DATA PELANGGARAN SELURUH SISWA</h3>
-      <p style="text-align:center; margin-bottom:20px;">Periode: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
+      <h3>REKAP DATA PELANGGARAN SELURUH SISWA</h3>
+      <p>Periode: ${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
 
-      <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
+      <table class="table-container">
         <thead>
-          <tr style="background:#f5f5f5;">
-            <th style="border:1px solid #ddd; padding:6px;">No</th>
-            <th style="border:1px solid #ddd; padding:6px;">Kelas</th>
-            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Jumlah Siswa</th>
-            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Jumlah Pelanggaran</th>
-            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Total Poin</th>
-            <th style="border:1px solid #ddd; padding:6px; text-align:center;">Rata-rata Poin</th>
+          <tr>
+            <th>No</th>
+            <th>Kelas</th>
+            <th style="text-align:center;">Jumlah Siswa</th>
+            <th style="text-align:center;">Jumlah Pelanggaran</th>
+            <th style="text-align:center;">Total Poin</th>
+            <th style="text-align:center;">Rata-rata Poin</th>
           </tr>
         </thead>
         <tbody>`;
@@ -1613,14 +1947,14 @@ function renderRekapSemua(area) {
         
         content += `
           <tr>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${no++}</td>
-            <td style="border:1px solid #ddd; padding:6px;">${escapeHtml(className)}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${studentCount}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${data.totalViolations}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">
-              <span class="badge bg-${data.totalPoints > 100 ? 'danger' : data.totalPoints > 50 ? 'warning' : 'success'}">${data.totalPoints}</span>
+            <td style="text-align:center;">${no++}</td>
+            <td>${escapeHtml(className)}</td>
+            <td style="text-align:center;">${studentCount}</td>
+            <td style="text-align:center;">${data.totalViolations}</td>
+            <td style="text-align:center;">
+              <span class="badge">${data.totalPoints}</span>
             </td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${avgPoints}</td>
+            <td style="text-align:center;">${avgPoints}</td>
           </tr>`;
     });
     
@@ -1630,11 +1964,11 @@ function renderRekapSemua(area) {
         </tbody>
         <tfoot>
           <tr style="background:#f5f5f5; font-weight:bold;">
-            <td colspan="2" style="border:1px solid #ddd; padding:6px; text-align:right;">TOTAL KESELURUHAN:</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalAllStudents}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalAllViolations}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${totalAllPoints}</td>
-            <td style="border:1px solid #ddd; padding:6px; text-align:center;">${overallAvg}</td>
+            <td colspan="2" style="text-align:right;">TOTAL KESELURUHAN:</td>
+            <td style="text-align:center;">${totalAllStudents}</td>
+            <td style="text-align:center;">${totalAllViolations}</td>
+            <td style="text-align:center;">${totalAllPoints}</td>
+            <td style="text-align:center;">${overallAvg}</td>
           </tr>
         </tfoot>
       </table>
@@ -1643,18 +1977,18 @@ function renderRekapSemua(area) {
     
     sortedClasses.forEach(([className, data]) => {
         content += `
-          <div style="margin-bottom:20px; page-break-inside: avoid;">
+          <div class="no-break" style="margin-bottom:20px;">
             <h5 style="margin-bottom:10px; background:#f0f0f0; padding:8px; border-radius:4px;">Kelas: ${escapeHtml(className)} (${data.totalViolations} pelanggaran, ${data.totalPoints} poin)</h5>
-            <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+            <table class="table-container" style="font-size:0.9em;">
               <thead>
                 <tr style="background:#f9f9f9;">
-                  <th style="border:1px solid #ccc; padding:4px;">No</th>
-                  <th style="border:1px solid #ccc; padding:4px;">NIS</th>
-                  <th style="border:1px solid #ccc; padding:4px;">Nama</th>
-                  <th style="border:1px solid #ccc; padding:4px;">Tanggal</th>
-                  <th style="border:1px solid #ccc; padding:4px;">Jenis Pelanggaran</th>
-                  <th style="border:1px solid #ccc; padding:4px; text-align:center;">Poin</th>
-                  <th style="border:1px solid #ccc; padding:4px;">Keterangan</th>
+                  <th>No</th>
+                  <th>NIS</th>
+                  <th>Nama</th>
+                  <th>Tanggal</th>
+                  <th>Jenis Pelanggaran</th>
+                  <th style="text-align:center;">Poin</th>
+                  <th>Keterangan</th>
                 </tr>
               </thead>
               <tbody>`;
@@ -1664,13 +1998,13 @@ function renderRekapSemua(area) {
             studentViolations.forEach(v => {
                 content += `
                   <tr>
-                    <td style="border:1px solid #ccc; padding:4px; text-align:center;">${studentNo++}</td>
-                    <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(student ? student.nis : v.studentNis)}</td>
-                    <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(student ? student.nama : v.studentName)}</td>
-                    <td style="border:1px solid #ccc; padding:4px;">${formatDate(v.date)}</td>
-                    <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(v.typeName)}</td>
-                    <td style="border:1px solid #ccc; padding:4px; text-align:center;">${v.points}</td>
-                    <td style="border:1px solid #ccc; padding:4px;">${escapeHtml(v.note || '-')}</td>
+                    <td style="text-align:center;">${studentNo++}</td>
+                    <td>${escapeHtml(student ? student.nis : v.studentNis)}</td>
+                    <td>${escapeHtml(student ? student.nama : v.studentName)}</td>
+                    <td>${formatDate(v.date)}</td>
+                    <td>${escapeHtml(v.typeName)}</td>
+                    <td style="text-align:center;">${v.points}</td>
+                    <td>${escapeHtml(v.note || '-')}</td>
                   </tr>`;
             });
         });
@@ -1682,7 +2016,7 @@ function renderRekapSemua(area) {
     });
     
     content += `
-      <div style="display:flex; justify-content:space-between; margin-top:40px;">
+      <div class="signature-area" style="display:flex; justify-content:space-between; margin-top:40px;">
         <div style="width:45%;">Mengetahui<br>Kepala Sekolah<br><br><br><strong>${escapeHtml(kepala)}</strong></div>
         <div style="width:45%; text-align:right;">${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>Waka Kesiswaan,<br><br><br><strong>${escapeHtml(schoolInfo.waka || 'Waka Kesiswaan')}</strong></div>
       </div>
@@ -1713,18 +2047,25 @@ function createPrintFrame(content, title) {
                 <title>${title}</title>
                 <style>
                     @page { size: A4; margin: 20mm; }
-                    body { font-family: Times, serif; line-height: 1.4; margin: 0; padding: 20px; }
+                    body { font-family: Times, serif; font-size: 11pt; line-height: 1.4; margin: 0; padding: 20px; }
                     table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-                    th, td { border: 1px solid #333; padding: 6px; text-align: left; }
-                    th { background-color: #f5f5f5; font-weight: bold; }
+                    th, td { border: 1px solid #000; padding: 4pt 6pt; font-size: 11pt; text-align: left; }
+                    th { background-color: #f5f5f5; font-weight: bold; text-align: center; }
                     .text-center { text-align: center; }
                     .text-right { text-align: right; }
-                    .mt-40 { margin-top: 40px; }
-                    img { max-width: 120px; height: auto; }
-                    .badge { padding: 3px 6px; border-radius: 3px; font-size: 0.8em; display: inline-block; }
-                    .badge-success { background-color: #28a745; color: white; }
-                    .badge-warning { background-color: #ffc107; color: black; }
-                    .badge-danger { background-color: #dc3545; color: white; }
+                    .mt-40 { margin-top: 40pt; }
+                    img { max-width: 80px; height: auto; }
+                    .badge { padding: 2pt 4pt; font-size: 9pt; border: 1px solid #000; background: transparent; color: #000; }
+                    .signature-area { margin-top: 30pt; }
+                    h1, h2, h3, h4, h5, h6 { font-size: 11pt; font-weight: bold; margin: 10pt 0; }
+                    h1 { font-size: 14pt; text-align: center; }
+                    h2 { font-size: 13pt; text-align: center; }
+                    h3 { font-size: 12pt; text-align: center; }
+                    p { font-size: 11pt; margin: 5pt 0; }
+                    hr { border: 1px solid #000; margin: 10pt 0; }
+                    .report-header { text-align: center; margin-bottom: 20pt; }
+                    .table-container { margin: 15pt 0; }
+                    .no-break { page-break-inside: avoid; }
                 </style>
             </head>
             <body>
@@ -1786,9 +2127,17 @@ function backupPDF() {
             scale: 2,
             useCORS: true,
             logging: false,
-            allowTaint: true
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            onclone: function(clonedDoc) {
+                // Pastikan background putih
+                clonedDoc.body.style.background = 'white';
+                // Tingkatkan kualitas font
+                clonedDoc.body.style.webkitFontSmoothing = 'antialiased';
+                clonedDoc.body.style.textRendering = 'optimizeLegibility';
+            }
         }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
             const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
             const imgWidth = 210;
             const pageHeight = 295;
@@ -1796,13 +2145,13 @@ function backupPDF() {
             let heightLeft = imgHeight;
             let position = 0;
             
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
             heightLeft -= pageHeight;
             
             while (heightLeft >= 0) {
                 position = heightLeft - imgHeight;
                 pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
                 heightLeft -= pageHeight;
             }
             
@@ -1838,21 +2187,21 @@ function printSemuaRiwayatPelanggaran(){
     const kepala = schoolInfo.kepala || 'Kepala Sekolah';
     const today = new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
     const header = `
-        <div class="text-center mb-20">
+        <div class="report-header">
             ${logo}
             <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
             <p>${escapeHtml(schoolInfo.address || '')}</p>
-            <hr style="border:1px solid #000; margin-top:10px;">
+            <hr>
             <h3>REKAPITULASI RIWAYAT PELANGGARAN SISWA</h3>
             <p>Tanggal Cetak: ${today}</p>
         </div>
     `;
     const full = violations.map(v=>{ const s = students.find(st=>st.nis===v.studentNis)||{}; return { date: v.date, nis: s.nis || v.studentNis || '-', nama: s.nama || '-', kelas: s.kelas || '-', jenis: v.typeName || '-', poin: v.points || 0, note: v.note || '' }; }).sort((a,b)=> new Date(a.date)-new Date(b.date));
-    let table = '<table><thead><tr><th>No</th><th>Tanggal</th><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Jenis Pelanggaran</th><th>Poin</th><th>Keterangan</th></tr></thead><tbody>';
-    full.forEach((r,i)=>{ const tgl = new Date(r.date).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); table += `<tr><td class="text-center">${i+1}</td><td>${tgl}</td><td>${escapeHtml(r.nis)}</td><td>${escapeHtml(r.nama)}</td><td>${escapeHtml(r.kelas)}</td><td>${escapeHtml(r.jenis)}</td><td class="text-center">${r.poin}</td><td>${escapeHtml(r.note)}</td></tr>`; });
+    let table = '<table class="table-container"><thead><tr><th>No</th><th>Tanggal</th><th>NIS</th><th>Nama Siswa</th><th>Kelas</th><th>Jenis Pelanggaran</th><th>Poin</th><th>Keterangan</th></tr></thead><tbody>';
+    full.forEach((r,i)=>{ const tgl = new Date(r.date).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); table += `<tr><td style="text-align:center;">${i+1}</td><td>${tgl}</td><td>${escapeHtml(r.nis)}</td><td>${escapeHtml(r.nama)}</td><td>${escapeHtml(r.kelas)}</td><td>${escapeHtml(r.jenis)}</td><td style="text-align:center;">${r.poin}</td><td>${escapeHtml(r.note)}</td></tr>`; });
     table += '</tbody></table>';
     table += `<div class="text-right" style="font-weight:bold; margin-top:10px;">Total Pelanggaran Tercatat: ${full.length}</div>`;
-    const content = header + table + `<div class="mt-40 text-center"><div>${schoolInfo.city || schoolInfo.kota || 'Jakarta'}, ${today}</div><div>Mengetahui<br>Kepala Sekolah</div><br><br><br><div><strong>${escapeHtml(kepala)}</strong></div></div>`;
+    const content = header + table + `<div class="signature-area text-center"><div>${schoolInfo.city || schoolInfo.kota || 'Jakarta'}, ${today}</div><div>Mengetahui<br>Kepala Sekolah</div><br><br><br><div><strong>${escapeHtml(kepala)}</strong></div></div>`;
     createPrintFrame(content, 'Rekap Riwayat Pelanggaran');
     showAlert('Dialog cetak akan segera terbuka...', 'info', 3000);
 }
@@ -1947,12 +2296,76 @@ function mergeViolationsJSON(event) {
 }
 
 function resetAll() {
-    if (!confirm('Apakah Anda yakin ingin menghapus SEMUA data? Tindakan ini tidak dapat dibatalkan!')) return;
-    if (!confirm('PERINGATAN: Semua data siswa, pelanggaran, dan pengaturan akan dihapus permanen. Lanjutkan?')) return;
-    localStorage.clear();
-    students = []; violations = []; violationTypes = [ {id:1,name:'Terlambat',points:5}, {id:2,name:'Tidak Pakai Seragam',points:10}, {id:3,name:'Bolos',points:20}, {id:4,name:'Bullying',points:30}, {id:5,name:'Tidak ikut upacara',points:15}, {id:6,name:'Tidak Ikut sholat berjamaah',points:20}, {id:7,name:'Merokok dilingkungan sekolah',points:15}, {id:8,name:'Tidak Ikut Kegiatan Sekolah',points:10}, {id:9,name:'Berkelahi sesama teman sekolah',points:20} ]; nextTypeId = 10; nextViolationId = 1; selectedStudentForViolation = null; selectedStudentForRekap = null;
-    showAlert('Semua data telah dihapus. Aplikasi akan dimuat ulang.');
-    setTimeout(()=>{ location.reload(); }, 1000);
+    // Konfirmasi ganda untuk mencegah reset tidak sengaja
+    if (!confirm('PERINGATAN: Ini akan menghapus SEMUA data aplikasi!')) return;
+    if (!confirm('Apakah Anda benar-benar yakin? Semua data siswa, pelanggaran, dan pengaturan akan dihapus PERMANEN!')) return;
+    if (!confirm('Tindakan ini tidak dapat dibatalkan. Klik OK untuk melanjutkan reset data.')) return;
+    
+    try {
+        // Hapus semua data dari localStorage
+        localStorage.clear();
+        
+        // Reset semua variabel global ke nilai default
+        students = [];
+        violations = []; // Array kosong, data akan dimuat dari localStorage
+        violationTypes = [
+            {id:1,name:'Terlambat',points:5}, 
+            {id:2,name:'Tidak Pakai Seragam',points:10}, 
+            {id:3,name:'Bolos',points:20}, 
+            {id:4,name:'Bullying',points:30},
+            {id:5,name:'Tidak ikut upacara',points:15},
+            {id:6,name:'Tidak Ikut sholat berjamaah',points:20},
+            {id:7,name:'Merokok dilingkungan sekolah',points:15},
+            {id:8,name:'Tidak Ikut Kegiatan Sekolah',points:10},
+            {id:9,name:'Berkelahi sesama teman sekolah',points:20}
+        ]; 
+        nextTypeId = 10;
+        nextViolationId = 1;
+        selectedStudentForViolation = null;
+        selectedStudentForRekap = null;
+        selectedStudentForLaporan = null;
+        
+        // Reset form inputs
+        document.getElementById('si_input_name').value = '';
+        document.getElementById('si_input_address').value = '';
+        document.getElementById('si_input_kepala').value = '';
+        document.getElementById('si_input_waka').value = '';
+        document.getElementById('si_logo_preview').src = '';
+        document.getElementById('schoolLogoSmall').src = '';
+        document.getElementById('si_name').textContent = 'Nama Sekolah';
+        document.getElementById('si_address').textContent = 'Alamat sekolah';
+        document.getElementById('si_kepala').textContent = '-';
+        document.getElementById('si_waka').textContent = '-';
+        
+        // Hapus logo dari localStorage jika ada
+        localStorage.removeItem('school_info');
+        localStorage.removeItem('students');
+        localStorage.removeItem('violations');
+        localStorage.removeItem('violation_types');
+        
+        // Force reload halaman untuk memastikan semua data ter-reset
+        showAlert('Semua data telah dihapus. Halaman akan dimuat ulang...', 'success', 3000);
+        
+        // Clear cache dan reload
+        setTimeout(() => {
+            // Clear session storage juga
+            sessionStorage.clear();
+            
+            // Force reload dengan cache busting
+            const url = new URL(window.location);
+            url.searchParams.set('reset', Date.now());
+            window.location.href = url.toString();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error during reset:', error);
+        showAlert('Terjadi kesalahan saat mereset data. Silakan coba lagi.', 'danger');
+        
+        // Fallback: force reload anyway
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 2000);
+    }
 }
 
 function addPasteBackupButton() {
@@ -1982,7 +2395,482 @@ function addPasteBackupButton() {
 }
 
 // =============================================================================
-// 10. LAPORAN (TREN) - LOGIKA YANG SUDAH DIPERBAIKI
+// 10. LAPORAN RANKING PELANGGARAN SISWA
+// =============================================================================
+
+function initializeRankingPage() {
+    populateRankingDateDropdowns();
+    populateRankingClassDropdown();
+    
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    
+    document.getElementById('rankingDariTahun').value = currentYear;
+    document.getElementById('rankingSampaiTahun').value = currentYear;
+    
+    // Set default to semester 1 (Januari - Juni)
+    document.getElementById('rankingDariBulan').value = '01';
+    document.getElementById('rankingSampaiBulan').value = '06';
+}
+
+function populateRankingDateDropdowns() {
+    const dariBulanSelect = document.getElementById('rankingDariBulan');
+    const sampaiBulanSelect = document.getElementById('rankingSampaiBulan');
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    [dariBulanSelect, sampaiBulanSelect].forEach(select => {
+        select.innerHTML = '';
+        for (let i = 1; i <= 12; i++) {
+            const option = document.createElement('option');
+            option.value = String(i).padStart(2, '0');
+            option.textContent = monthNames[i - 1];
+            select.appendChild(option);
+        }
+    });
+}
+
+function populateRankingClassDropdown() {
+    const select = document.getElementById('rankingKelas');
+    if (!select) return;
+    
+    const classes = [...new Set(students.map(s => s.kelas).filter(k => k))].sort();
+    
+    select.innerHTML = '<option value="">Semua Kelas</option>';
+    classes.forEach(cls => {
+        const opt = document.createElement('option');
+        opt.value = cls;
+        opt.textContent = cls;
+        select.appendChild(opt);
+    });
+}
+
+function handleRankingPeriodChange() {
+    const period = document.getElementById('rankingPeriod').value;
+    const customStart = document.getElementById('rankingCustomStart');
+    const customStartYear = document.getElementById('rankingCustomStartYear');
+    const customEnd = document.getElementById('rankingCustomEnd');
+    const customEndYear = document.getElementById('rankingCustomEndYear');
+    
+    if (period === 'custom') {
+        customStart.style.display = 'block';
+        customStartYear.style.display = 'block';
+        customEnd.style.display = 'block';
+        customEndYear.style.display = 'block';
+    } else {
+        customStart.style.display = 'none';
+        customStartYear.style.display = 'none';
+        customEnd.style.display = 'none';
+        customEndYear.style.display = 'none';
+        
+        // Set default dates based on period
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        
+        if (period === 'semester-1') {
+            document.getElementById('rankingDariBulan').value = '01';
+            document.getElementById('rankingSampaiBulan').value = '06';
+        } else if (period === 'semester-2') {
+            document.getElementById('rankingDariBulan').value = '07';
+            document.getElementById('rankingSampaiBulan').value = '12';
+        } else if (period === 'tahunan') {
+            document.getElementById('rankingDariBulan').value = '01';
+            document.getElementById('rankingSampaiBulan').value = '12';
+        }
+        
+        document.getElementById('rankingDariTahun').value = currentYear;
+        document.getElementById('rankingSampaiTahun').value = currentYear;
+    }
+}
+
+function tampilkanRankingSiswa() {
+    const period = document.getElementById('rankingPeriod').value;
+    const dariBulan = document.getElementById('rankingDariBulan').value;
+    const dariTahun = parseInt(document.getElementById('rankingDariTahun').value);
+    const sampaiBulan = document.getElementById('rankingSampaiBulan').value;
+    const sampaiTahun = parseInt(document.getElementById('rankingSampaiTahun').value);
+    const filterKelas = document.getElementById('rankingKelas').value;
+
+    if (!dariBulan || !dariTahun || !sampaiBulan || !sampaiTahun) {
+        showAlert('Rentang waktu harus diisi lengkap!', 'danger');
+        return;
+    }
+
+    const startDate = new Date(dariTahun, dariBulan - 1, 1);
+    const endDate = new Date(sampaiTahun, sampaiBulan - 1, 1);
+    endDate.setMonth(endDate.getMonth() + 1);
+
+    // Reset violationsByStudent untuk setiap kali fungsi dipanggil
+    const violationsByStudent = {};
+    
+    violations.forEach(v => {
+        const violationDate = new Date(v.date);
+        
+        // Check if violation is within date range
+        if (violationDate >= startDate && violationDate < endDate) {
+            // Apply class filter if selected
+            if (filterKelas) {
+                const student = students.find(s => s.nis === v.studentNis);
+                if (!student || student.kelas !== filterKelas) {
+                    return;
+                }
+            }
+            
+            // Initialize student data if not exists
+            if (!violationsByStudent[v.studentNis]) {
+                const student = students.find(s => s.nis === v.studentNis);
+                violationsByStudent[v.studentNis] = {
+                    student: student || { 
+                        nis: v.studentNis, 
+                        nama: v.studentName, 
+                        kelas: v.studentClass 
+                    },
+                    violations: [],
+                    totalPoints: 0,
+                    violationCount: 0
+                };
+            }
+            
+            // Add violation to student's violations array
+            violationsByStudent[v.studentNis].violations.push(v);
+            
+            // Add points to total (ini yang penting - pastikan tidak double count)
+            violationsByStudent[v.studentNis].totalPoints += v.points;
+            violationsByStudent[v.studentNis].violationCount++;
+        }
+    });
+
+    // Convert to array and sort by total points (descending)
+    const rankingData = Object.values(violationsByStudent)
+        .filter(student => student.totalPoints > 0) // Only include students with violations
+        .sort((a, b) => b.totalPoints - a.totalPoints);
+
+    renderRankingSiswaTable(rankingData);
+}
+
+function renderRankingSiswaTable(rankingData) {
+    const tbody = document.querySelector('#rankingSiswaTable tbody');
+    tbody.innerHTML = '';
+
+    if (rankingData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">Tidak ada data pelanggaran untuk periode yang dipilih.</td></tr>`;
+        return;
+    }
+
+    rankingData.forEach((studentData, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="text-align: center; font-weight: bold;">${index + 1}</td>
+            <td>${escapeHtml(studentData.student.nis)}</td>
+            <td>${escapeHtml(studentData.student.nama)}</td>
+            <td>${escapeHtml(studentData.student.kelas || '-')}</td>
+            <td style="text-align: center;">${studentData.violationCount}</td>
+            <td style="text-align: center;">
+                <span class="badge bg-${studentData.totalPoints > 50 ? 'danger' : studentData.totalPoints > 20 ? 'warning' : 'info'}">
+                    ${studentData.totalPoints}
+                </span>
+            </td>
+            <td style="text-align: center;">
+                <button class="btn btn-sm btn-outline-primary" onclick="showDetailPelanggaran('${studentData.student.nis}')">
+                    <i class="fas fa-eye"></i> Detail
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function showDetailPelanggaran(studentNis) {
+    const student = students.find(s => s.nis === studentNis);
+    if (!student) return;
+    
+    const studentViolations = violations
+        .filter(v => v.studentNis === studentNis)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    const modal = new bootstrap.Modal(document.getElementById('detailPelanggaranModal'));
+    const content = document.getElementById('detailPelanggaranContent');
+    
+    let detailHtml = `
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <strong>NIS:</strong> ${escapeHtml(student.nis)}
+            </div>
+            <div class="col-md-6">
+                <strong>Nama:</strong> ${escapeHtml(student.nama)}
+            </div>
+            <div class="col-md-6">
+                <strong>Kelas:</strong> ${escapeHtml(student.kelas || '-')}
+            </div>
+            <div class="col-md-6">
+                <strong>Total Pelanggaran:</strong> ${studentViolations.length}
+            </div>
+        </div>
+        
+        <h5>Riwayat Pelanggaran:</h5>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Jenis Pelanggaran</th>
+                        <th>Poin</th>
+                        <th>Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    let totalPoints = 0;
+    studentViolations.forEach(v => {
+        totalPoints += v.points;
+        detailHtml += `
+            <tr>
+                <td>${formatDate(v.date)}</td>
+                <td>${escapeHtml(v.typeName)}</td>
+                <td><span class="badge bg-${v.points > 15 ? 'danger' : v.points > 5 ? 'warning' : 'info'}">${v.points}</span></td>
+                <td>${escapeHtml(v.note || '-')}</td>
+            </tr>
+        `;
+    });
+    
+    detailHtml += `
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-3">
+            <strong>Total Poin:</strong> 
+            <span class="badge bg-${totalPoints > 50 ? 'danger' : totalPoints > 20 ? 'warning' : 'info'}">
+                ${totalPoints}
+            </span>
+        </div>
+    `;
+    
+    content.innerHTML = detailHtml;
+    modal.show();
+}
+
+function cetakRankingSiswa() {
+    const tbody = document.querySelector('#rankingSiswaTable tbody');
+    if (!tbody || tbody.innerHTML.includes('Tidak ada data')) {
+        showAlert('Tampilkan ranking terlebih dahulu sebelum mencetak!', 'warning');
+        return;
+    }
+    
+    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
+    const period = document.getElementById('rankingPeriod').value;
+    const dariBulan = document.getElementById('rankingDariBulan').value;
+    const dariTahun = document.getElementById('rankingDariTahun').value;
+    const sampaiBulan = document.getElementById('rankingSampaiBulan').value;
+    const sampaiTahun = document.getElementById('rankingSampaiTahun').value;
+    const filterKelas = document.getElementById('rankingKelas').value;
+    
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const periodeText = period === 'custom' ? 
+        `${monthNames[parseInt(dariBulan)-1]} ${dariTahun} - ${monthNames[parseInt(sampaiBulan)-1]} ${sampaiTahun}` :
+        period === 'semester-1' ? `Semester 1 ${dariTahun}` :
+        period === 'semester-2' ? `Semester 2 ${dariTahun}` :
+        `Tahun ${dariTahun}`;
+    
+    let content = `
+        <div class="print-content" style="font-family: Times, serif; padding: 20px;">
+            <div class="report-header">
+                ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:80px; height:auto;">` : ''}
+                <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+                <p>${escapeHtml(schoolInfo.address || '')}</p>
+                <hr>
+                <h3>LAPORAN RANKING PELANGGARAN SISWA</h3>
+                <p>Periode: ${periodeText}</p>
+                ${filterKelas ? `<p>Kelas: ${escapeHtml(filterKelas)}</p>` : ''}
+            </div>
+            
+            <table class="table-container">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>NIS</th>
+                        <th>Nama Siswa</th>
+                        <th>Kelas</th>
+                        <th style="text-align:center;">Jumlah Pelanggaran</th>
+                        <th style="text-align:center;">Total Poin</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 6) {
+            content += `
+                <tr>
+                    <td style="text-align:center; font-weight:bold;">${cells[0].textContent}</td>
+                    <td>${escapeHtml(cells[1].textContent)}</td>
+                    <td>${escapeHtml(cells[2].textContent)}</td>
+                    <td>${escapeHtml(cells[3].textContent)}</td>
+                    <td style="text-align:center;">${cells[4].textContent}</td>
+                    <td style="text-align:center;">${cells[5].textContent}</td>
+                </tr>
+            `;
+        }
+    });
+    
+    content += `
+                </tbody>
+            </table>
+            
+            <div class="signature-area" style="display:flex; justify-content:space-between; margin-top:40px;">
+                <div style="width:45%;">Mengetahui<br>Kepala Sekolah<br><br><br><strong>${escapeHtml(schoolInfo.kepala || 'Kepala Sekolah')}</strong></div>
+                <div style="width:45%; text-align:right;">${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>Waka Kesiswaan,<br><br><br><strong>${escapeHtml(schoolInfo.waka || 'Waka Kesiswaan')}</strong></div>
+            </div>
+        </div>
+    `;
+    
+    createPrintFrame(content, 'Ranking Pelanggaran Siswa');
+    showAlert('Dialog cetak akan segera terbuka...', 'info', 3000);
+}
+
+function backupRankingSiswaPDF() {
+    const tbody = document.querySelector('#rankingSiswaTable tbody');
+    if (!tbody || tbody.innerHTML.includes('Tidak ada data')) {
+        showAlert('Tampilkan ranking terlebih dahulu sebelum backup PDF!', 'warning');
+        return;
+    }
+    
+    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
+    const period = document.getElementById('rankingPeriod').value;
+    const dariBulan = document.getElementById('rankingDariBulan').value;
+    const dariTahun = document.getElementById('rankingDariTahun').value;
+    const sampaiBulan = document.getElementById('rankingSampaiBulan').value;
+    const sampaiTahun = document.getElementById('rankingSampaiTahun').value;
+    const filterKelas = document.getElementById('rankingKelas').value;
+    
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const periodeText = period === 'custom' ? 
+        `${monthNames[parseInt(dariBulan)-1]} ${dariTahun} - ${monthNames[parseInt(sampaiBulan)-1]} ${sampaiTahun}` :
+        period === 'semester-1' ? `Semester 1 ${dariTahun}` :
+        period === 'semester-2' ? `Semester 2 ${dariTahun}` :
+        `Tahun ${dariTahun}`;
+    
+    const contentToPrint = `
+        <div class="print-content" style="font-family: Times, serif; padding: 20px; background: white;">
+            <div class="report-header">
+                ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:80px; height:auto;">` : ''}
+                <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+                <p>${escapeHtml(schoolInfo.address || '')}</p>
+                <hr>
+                <h3>LAPORAN RANKING PELANGGARAN SISWA</h3>
+                <p>Periode: ${periodeText}</p>
+                ${filterKelas ? `<p>Kelas: ${escapeHtml(filterKelas)}</p>` : ''}
+            </div>
+            
+            <table class="table-container">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>NIS</th>
+                        <th>Nama Siswa</th>
+                        <th>Kelas</th>
+                        <th style="text-align:center;">Jumlah Pelanggaran</th>
+                        <th style="text-align:center;">Total Poin</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 6) {
+            contentToPrint += `
+                <tr>
+                    <td style="text-align:center; font-weight:bold;">${cells[0].textContent}</td>
+                    <td>${escapeHtml(cells[1].textContent)}</td>
+                    <td>${escapeHtml(cells[2].textContent)}</td>
+                    <td>${escapeHtml(cells[3].textContent)}</td>
+                    <td style="text-align:center;">${cells[4].textContent}</td>
+                    <td style="text-align:center;">${cells[5].textContent}</td>
+                </tr>
+            `;
+        }
+    });
+    
+    contentToPrint += `
+                </tbody>
+            </table>
+            
+            <div class="signature-area" style="display:flex; justify-content:space-between; margin-top:40px;">
+                <div style="width:45%;">Mengetahui<br>Kepala Sekolah<br><br><br><strong>${escapeHtml(schoolInfo.kepala || 'Kepala Sekolah')}</strong></div>
+                <div style="width:45%; text-align:right;">${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>Waka Kesiswaan,<br><br><br><strong>${escapeHtml(schoolInfo.waka || 'Waka Kesiswaan')}</strong></div>
+            </div>
+        </div>
+    `;
+
+    showAlert('Sedang membuat PDF...', 'info', 10000);
+
+    // Buat elemen div sementara
+    const tempElement = document.createElement('div');
+    tempElement.innerHTML = contentToPrint;
+    // Sembunyikan elemen di luar layar
+    tempElement.style.position = 'absolute';
+    tempElement.style.left = '-9999px';
+    tempElement.style.top = '0';
+    tempElement.style.background = 'white'; // Penting untuk html2canvas
+    document.body.appendChild(tempElement);
+
+    // Gunakan setTimeout untuk memberi jeda waktu bagi browser merender elemen
+    setTimeout(() => {
+        html2canvas(tempElement, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            onclone: function(clonedDoc) {
+                // Pastikan background putih
+                clonedDoc.body.style.background = 'white';
+                // Tingkatkan kualitas font
+                clonedDoc.body.style.webkitFontSmoothing = 'antialiased';
+                clonedDoc.body.style.textRendering = 'optimizeLegibility';
+            }
+        }).then(canvas => {
+            // Hapus elemen sementara setelah canvas dibuat
+            document.body.removeChild(tempElement);
+
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            const pageHeight = 295;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+            
+            pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            
+            const fileName = `ranking_pelanggaran_siswa_${new Date().toISOString().split('T')[0]}.pdf`;
+            pdf.save(fileName);
+            showAlert('PDF Ranking berhasil dibuat dan diunduh!', 'success');
+        }).catch(error => {
+            // Hapus elemen sementara juga jika terjadi error
+            if (document.body.contains(tempElement)) {
+                document.body.removeChild(tempElement);
+            }
+            console.error('Error creating PDF:', error);
+            showAlert('Gagal membuat PDF. Kesalahan: ' + error.message, 'danger');
+        });
+    }, 200); // Jeda 200 milidetik
+}
+
+// =============================================================================
+// 11. LAPORAN (TREN) - LOGIKA YANG SUDAH DIPERBAIKI
 // =============================================================================
 
 function initializeLaporanPage() {
@@ -2230,188 +3118,6 @@ function renderLaporanTable(labels, counts, points) {
         `;
         tbody.appendChild(tr);
     });
-}
-
-// =============================================================================
-// 11. LAPORAN RANKING PELANGGARAN (FITUR BARU)
-// =============================================================================
-
-function tampilkanLaporanRanking() {
-    const dariBulan = document.getElementById('laporanDariBulan').value;
-    const dariTahun = parseInt(document.getElementById('laporanDariTahun').value);
-    const sampaiBulan = document.getElementById('laporanSampaiBulan').value;
-    const sampaiTahun = parseInt(document.getElementById('laporanSampaiTahun').value);
-
-    if (!dariBulan || !dariTahun || !sampaiBulan || !sampaiTahun) {
-        showAlert('Rentang waktu harus diisi lengkap!', 'danger');
-        return;
-    }
-
-    const startDate = new Date(dariTahun, dariBulan - 1, 1);
-    const endDate = new Date(sampaiTahun, sampaiBulan - 1, 1);
-
-    if (startDate > endDate) {
-        showAlert('Tanggal mulai tidak boleh lebih besar dari tanggal selesai!', 'danger');
-        return;
-    }
-
-    const reportData = {};
-
-    const violationCountsTemplate = {};
-    violationTypes.forEach(vt => {
-        violationCountsTemplate[vt.name] = 0;
-    });
-
-    let currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const monthLabel = currentDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
-
-        const monthlyCounts = { ...violationCountsTemplate };
-
-        violations.forEach(v => {
-            const violationDate = new Date(v.date);
-            if (violationDate.getFullYear() === year && violationDate.getMonth() === month) {
-                if (monthlyCounts.hasOwnProperty(v.typeName)) {
-                    monthlyCounts[v.typeName]++;
-                }
-            }
-        });
-
-        const sortedViolations = Object.entries(monthlyCounts)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count);
-
-        reportData[monthLabel] = sortedViolations;
-
-        currentDate.setMonth(month + 1);
-    }
-
-    renderRankingTable(reportData);
-}
-
-function renderRankingTable(reportData) {
-    const tbody = document.querySelector('#rankingTable tbody');
-    tbody.innerHTML = '';
-
-    const monthLabels = Object.keys(reportData);
-    if (monthLabels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Tidak ada data untuk ditampilkan pada rentang waktu ini.</td></tr>`;
-        return;
-    }
-
-    monthLabels.forEach(monthLabel => {
-        const violations = reportData[monthLabel];
-        let isFirstRowForMonth = true;
-
-        violations.forEach(v => {
-            const tr = document.createElement('tr');
-            
-            const monthCell = isFirstRowForMonth ? 
-                `<td rowspan="${violations.length}" style="vertical-align: middle; font-weight: bold;">${monthLabel}</td>` : '';
-
-            tr.innerHTML = `
-                ${monthCell}
-                <td>${v.name}</td>
-                <td><span class="badge bg-${v.count > 10 ? 'danger' : v.count > 0 ? 'warning' : 'secondary'}">${v.count}</span></td>
-            `;
-            tbody.appendChild(tr);
-            isFirstRowForMonth = false;
-        });
-    });
-}
-
-function backupRankingPDF() {
-    // Pastikan library html2canvas sudah dimuat
-    if (typeof html2canvas === 'undefined') {
-        showAlert('Library html2canvas tidak ditemukan. Pastikan koneksi internet Anda stabil dan coba lagi.', 'danger');
-        return;
-    }
-
-    const rankingTableElement = document.getElementById('rankingTable');
-    if (!rankingTableElement || rankingTableElement.querySelector('tbody').innerHTML.includes('Klik tombol')) {
-        showAlert('Tampilkan ranking terlebih dahulu sebelum backup PDF!', 'warning');
-        return;
-    }
-
-    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
-    const dariBulan = document.getElementById('laporanDariBulan').value;
-    const dariTahun = document.getElementById('laporanDariTahun').value;
-    const sampaiBulan = document.getElementById('laporanSampaiBulan').value;
-    const sampaiTahun = document.getElementById('laporanSampaiTahun').value;
-
-    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    const periodeText = `${monthNames[parseInt(dariBulan)-1]} ${dariTahun} - ${monthNames[parseInt(sampaiBulan)-1]} ${sampaiTahun}`;
-
-    const contentToPrint = `
-        <div style="font-family: Times, serif; padding: 20px; background: white;">
-            <div style="text-align:center; margin-bottom: 20px;">
-                ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:80px; height:auto;">` : ''}
-                <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
-                <p>${escapeHtml(schoolInfo.address || '')}</p>
-                <hr>
-                <h3>Laporan Ranking Pelanggaran per Bulan</h3>
-                <p>Periode: ${periodeText}</p>
-            </div>
-            ${rankingTableElement.outerHTML}
-        </div>
-    `;
-
-    showAlert('Sedang membuat PDF...', 'info', 10000);
-
-    // Buat elemen div sementara
-    const tempElement = document.createElement('div');
-    tempElement.innerHTML = contentToPrint;
-    // Sembunyikan elemen di luar layar
-    tempElement.style.position = 'absolute';
-    tempElement.style.left = '-9999px';
-    tempElement.style.top = '0';
-    tempElement.style.background = 'white'; // Penting untuk html2canvas
-    document.body.appendChild(tempElement);
-
-    // Gunakan setTimeout untuk memberi jeda waktu bagi browser merender elemen
-    setTimeout(() => {
-        html2canvas(tempElement, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            allowTaint: true,
-            backgroundColor: '#ffffff' // Pastikan background putih
-        }).then(canvas => {
-            // Hapus elemen sementara setelah canvas dibuat
-            document.body.removeChild(tempElement);
-
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-            const imgWidth = 210;
-            const pageHeight = 295;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            let heightLeft = imgHeight;
-            let position = 0;
-            
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-            
-            while (heightLeft >= 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-            }
-            
-            const fileName = `laporan_ranking_pelanggaran_${new Date().toISOString().split('T')[0]}.pdf`;
-            pdf.save(fileName);
-            showAlert('PDF Ranking berhasil dibuat dan diunduh!', 'success');
-        }).catch(error => {
-            // Hapus elemen sementara juga jika terjadi error
-            if (document.body.contains(tempElement)) {
-                document.body.removeChild(tempElement);
-            }
-            console.error('Error creating PDF:', error);
-            showAlert('Gagal membuat PDF. Kesalahan: ' + error.message, 'danger');
-        });
-    }, 200); // Jeda 200 milidetik
 }
 
 // =============================================================================
