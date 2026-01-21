@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Aplikasi Pelanggaran Siswa — v2.3 (Mobile-Optimized)</title>
+  <title>Aplikasi Pelanggaran Siswa — v2.3.1 (Fixed)</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -746,6 +746,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+        <button class="btn btn-primary" onclick="cetakDetailPelanggaran()">Cetak Detail</button>
       </div>
     </div>
   </div>
@@ -864,7 +865,7 @@ let nextTypeId = 10;
 let nextViolationId = 1;
 let selectedStudentForViolation = null;
 let selectedStudentForRekap = null;
-let selectedStudentForLaporan = null;
+selectedStudentForLaporan = null;
 let trendChartInstance = null;
 
 // =============================================================================
@@ -2123,7 +2124,16 @@ function backupPDF() {
     showAlert('Sedang membuat PDF...', 'info', 10000);
     
     try {
-        html2canvas(rekapElement, {
+        // Clone element untuk menghindari perubahan di DOM
+        const elementToPrint = rekapElement.cloneNode(true);
+        elementToPrint.style.position = 'absolute';
+        elementToPrint.style.left = '-9999px';
+        elementToPrint.style.top = '0';
+        elementToPrint.style.background = 'white';
+        elementToPrint.style.width = '210mm'; // Lebar A4
+        document.body.appendChild(elementToPrint);
+        
+        html2canvas(elementToPrint, {
             scale: 2,
             useCORS: true,
             logging: false,
@@ -2132,11 +2142,13 @@ function backupPDF() {
             onclone: function(clonedDoc) {
                 // Pastikan background putih
                 clonedDoc.body.style.background = 'white';
-                // Tingkatkan kualitas font
                 clonedDoc.body.style.webkitFontSmoothing = 'antialiased';
                 clonedDoc.body.style.textRendering = 'optimizeLegibility';
             }
         }).then(canvas => {
+            // Hapus elemen kloning setelah canvas dibuat
+            document.body.removeChild(elementToPrint);
+            
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
             const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
             const imgWidth = 210;
@@ -2171,6 +2183,9 @@ function backupPDF() {
             pdf.save(fileName);
             showAlert('PDF berhasil dibuat dan diunduh!', 'success');
         }).catch(error => {
+            if (document.body.contains(elementToPrint)) {
+                document.body.removeChild(elementToPrint);
+            }
             console.error('Error creating PDF:', error);
             showAlert('Gagal membuat PDF. Pastikan library html2canvas dan jsPDF telah dimuat dengan benar.', 'danger');
         });
@@ -2313,7 +2328,7 @@ function resetAll() {
             {id:2,name:'Tidak Pakai Seragam',points:10}, 
             {id:3,name:'Bolos',points:20}, 
             {id:4,name:'Bullying',points:30},
-            {id:5,name:'Tidak ikut upacara',points:15},
+            {id:5,name:'Tidak ikut upacera',points:15},
             {id:6,name:'Tidak Ikut sholat berjamaah',points:20},
             {id:7,name:'Merokok dilingkungan sekolah',points:15},
             {id:8,name:'Tidak Ikut Kegiatan Sekolah',points:10},
@@ -2395,7 +2410,7 @@ function addPasteBackupButton() {
 }
 
 // =============================================================================
-// 10. LAPORAN RANKING PELANGGARAN SISWA
+// 10. LAPORAN RANKING PELANGGARAN SISWA - FIXED VERSION
 // =============================================================================
 
 function initializeRankingPage() {
@@ -2499,7 +2514,6 @@ function tampilkanRankingSiswa() {
     const endDate = new Date(sampaiTahun, sampaiBulan - 1, 1);
     endDate.setMonth(endDate.getMonth() + 1);
 
-    // Reset violationsByStudent untuk setiap kali fungsi dipanggil
     const violationsByStudent = {};
     
     violations.forEach(v => {
@@ -2533,7 +2547,7 @@ function tampilkanRankingSiswa() {
             // Add violation to student's violations array
             violationsByStudent[v.studentNis].violations.push(v);
             
-            // Add points to total (ini yang penting - pastikan tidak double count)
+            // Add points to total
             violationsByStudent[v.studentNis].totalPoints += v.points;
             violationsByStudent[v.studentNis].violationCount++;
         }
@@ -2583,12 +2597,64 @@ function showDetailPelanggaran(studentNis) {
     const student = students.find(s => s.nis === studentNis);
     if (!student) return;
     
+    // Ambil parameter periode dari form ranking
+    const period = document.getElementById('rankingPeriod').value;
+    const dariBulan = document.getElementById('rankingDariBulan').value;
+    const dariTahun = parseInt(document.getElementById('rankingDariTahun').value);
+    const sampaiBulan = document.getElementById('rankingSampaiBulan').value;
+    const sampaiTahun = parseInt(document.getElementById('rankingSampaiTahun').value);
+    const filterKelas = document.getElementById('rankingKelas').value;
+    
+    // Jika ada filter kelas, pastikan siswa sesuai kelas
+    if (filterKelas && student.kelas !== filterKelas) {
+        showAlert('Siswa tidak termasuk dalam kelas yang difilter!', 'warning');
+        return;
+    }
+    
+    // Hitung rentang waktu berdasarkan periode
+    let startDate, endDate;
+    
+    if (period === 'semester-1') {
+        startDate = new Date(dariTahun, 0, 1); // 1 Januari
+        endDate = new Date(dariTahun, 5, 30); // 30 Juni
+    } else if (period === 'semester-2') {
+        startDate = new Date(dariTahun, 6, 1); // 1 Juli
+        endDate = new Date(dariTahun, 11, 31); // 31 Desember
+    } else if (period === 'tahunan') {
+        startDate = new Date(dariTahun, 0, 1); // 1 Januari
+        endDate = new Date(dariTahun, 11, 31); // 31 Desember
+    } else if (period === 'custom') {
+        startDate = new Date(dariTahun, dariBulan - 1, 1);
+        endDate = new Date(sampaiTahun, sampaiBulan - 1, 1);
+        endDate.setMonth(endDate.getMonth() + 1);
+    } else {
+        // Default: semester 1 tahun ini
+        const currentYear = new Date().getFullYear();
+        startDate = new Date(currentYear, 0, 1);
+        endDate = new Date(currentYear, 5, 30);
+    }
+    
+    // Filter pelanggaran berdasarkan rentang waktu yang SAMA dengan ranking
     const studentViolations = violations
-        .filter(v => v.studentNis === studentNis)
+        .filter(v => {
+            if (v.studentNis !== studentNis) return false;
+            
+            const violationDate = new Date(v.date);
+            return violationDate >= startDate && violationDate < endDate;
+        })
         .sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Hitung total poin dalam periode yang SAMA dengan ranking
+    const totalPoints = studentViolations.reduce((sum, v) => sum + v.points, 0);
     
     const modal = new bootstrap.Modal(document.getElementById('detailPelanggaranModal'));
     const content = document.getElementById('detailPelanggaranContent');
+    
+    // Simpan data periode untuk tombol cetak
+    content.dataset.studentNis = studentNis;
+    content.dataset.startDate = startDate.toISOString();
+    content.dataset.endDate = endDate.toISOString();
+    content.dataset.filterKelas = filterKelas || '';
     
     let detailHtml = `
         <div class="row mb-3">
@@ -2606,6 +2672,10 @@ function showDetailPelanggaran(studentNis) {
             </div>
         </div>
         
+        <div class="mb-3">
+            <strong>Periode:</strong> ${getPeriodText(period, dariBulan, dariTahun, sampaiBulan, sampaiTahun)}
+        </div>
+        
         <h5>Riwayat Pelanggaran:</h5>
         <div style="max-height: 300px; overflow-y: auto;">
             <table class="table table-sm">
@@ -2620,9 +2690,7 @@ function showDetailPelanggaran(studentNis) {
                 <tbody>
     `;
     
-    let totalPoints = 0;
     studentViolations.forEach(v => {
-        totalPoints += v.points;
         detailHtml += `
             <tr>
                 <td>${formatDate(v.date)}</td>
@@ -2648,6 +2716,126 @@ function showDetailPelanggaran(studentNis) {
     
     content.innerHTML = detailHtml;
     modal.show();
+}
+
+function getPeriodText(period, dariBulan, dariTahun, sampaiBulan, sampaiTahun) {
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    if (period === 'semester-1') {
+        return `Semester 1 ${dariTahun}`;
+    } else if (period === 'semester-2') {
+        return `Semester 2 ${dariTahun}`;
+    } else if (period === 'tahunan') {
+        return `Tahun ${dariTahun}`;
+    } else if (period === 'custom') {
+        const dariBulanName = monthNames[parseInt(dariBulan) - 1];
+        const sampaiBulanName = monthNames[parseInt(sampaiBulan) - 1];
+        return `${dariBulanName} ${dariTahun} - ${sampaiBulanName} ${sampaiTahun}`;
+    }
+    return '';
+}
+
+function cetakDetailPelanggaran() {
+    const content = document.getElementById('detailPelanggaranContent');
+    if (!content.dataset.studentNis) {
+        showAlert('Tidak ada data detail untuk dicetak!', 'warning');
+        return;
+    }
+    
+    const studentNis = content.dataset.studentNis;
+    const student = students.find(s => s.nis === studentNis);
+    if (!student) return;
+    
+    const startDate = new Date(content.dataset.startDate);
+    const endDate = new Date(content.dataset.endDate);
+    const filterKelas = content.dataset.filterKelas;
+    
+    // Filter pelanggaran untuk periode yang sama
+    const studentViolations = violations
+        .filter(v => {
+            if (v.studentNis !== studentNis) return false;
+            const violationDate = new Date(v.date);
+            return violationDate >= startDate && violationDate < endDate;
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const totalPoints = studentViolations.reduce((sum, v) => sum + v.points, 0);
+    
+    const schoolInfo = JSON.parse(localStorage.getItem('school_info')||'{}');
+    const kepala = schoolInfo.kepala || 'Kepala Sekolah';
+    const waka = schoolInfo.waka || 'Waka Kesiswaan';
+    
+    // Format tanggal periode
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const periodText = `${monthNames[startDate.getMonth()]} ${startDate.getFullYear()} - ${monthNames[endDate.getMonth() - 1] || 'Desember'} ${endDate.getFullYear()}`;
+    
+    let printContent = `
+    <div class="print-content" style="font-family: Times, serif; line-height:1.5; padding:18px;">
+      <div class="report-header">
+        ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="width:90px; height:auto; margin-bottom:5px;">` : ''}
+        <h2>${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
+        <p>${escapeHtml(schoolInfo.address || '')}</p>
+        <hr>
+      </div>
+
+      <h3>DETAIL PELANGGARAN SISWA</h3>
+      <p>Periode: ${periodText}</p>
+
+      <table class="table-container">
+        <tr><td style="width:100px">NIS</td><td>: ${escapeHtml(student.nis)}</td></tr>
+        <tr><td>Nama</td><td>: ${escapeHtml(student.nama)}</td></tr>
+        <tr><td>Kelas</td><td>: ${escapeHtml(student.kelas || '-')}</td></tr>
+        <tr><td>Orang Tua</td><td>: ${escapeHtml(getStudentProperty(student, 'ortu'))}</td></tr>
+      </table>
+
+      <h4>Riwayat Pelanggaran</h4>
+      <table class="table-container">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Tanggal</th>
+            <th>Jenis Pelanggaran</th>
+            <th style="text-align:center;">Poin</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    
+    studentViolations.forEach((v, i) => {
+        printContent += `
+          <tr>
+            <td style="text-align:center;">${i + 1}</td>
+            <td>${formatDate(v.date)}</td>
+            <td>${escapeHtml(v.typeName)}</td>
+            <td style="text-align:center;">${v.points}</td>
+            <td>${escapeHtml(v.note || '-')}</td>
+          </tr>`;
+    });
+    
+    printContent += `
+        </tbody>
+      </table>
+      
+      <div class="text-right" style="font-weight:bold; margin-top:20px;">
+        Total Pelanggaran: ${studentViolations.length} | Total Poin: ${totalPoints}
+      </div>
+      
+      <div class="signature-area" style="display:flex; justify-content:space-between; margin-top:60px;">
+        <div style="width:45%;">
+          Mengetahui<br>
+          Kepala Sekolah<br><br><br><br>
+          <strong>${escapeHtml(kepala)}</strong>
+        </div>
+        <div style="width:45%; text-align:right;">
+          ${new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })}<br>
+          Waka Kesiswaan,<br><br><br><br>
+          <strong>${escapeHtml(waka)}</strong>
+        </div>
+      </div>
+    </div>`;
+    
+    createPrintFrame(printContent, `Detail Pelanggaran ${student.nama}`);
+    showAlert('Dialog cetak akan segera terbuka...', 'info', 3000);
 }
 
 function cetakRankingSiswa() {
@@ -2816,6 +3004,8 @@ function backupRankingSiswaPDF() {
     tempElement.style.left = '-9999px';
     tempElement.style.top = '0';
     tempElement.style.background = 'white'; // Penting untuk html2canvas
+    tempElement.style.width = '210mm'; // Lebar A4
+    tempElement.style.padding = '20px';
     document.body.appendChild(tempElement);
 
     // Gunakan setTimeout untuk memberi jeda waktu bagi browser merender elemen
@@ -2866,7 +3056,7 @@ function backupRankingSiswaPDF() {
             console.error('Error creating PDF:', error);
             showAlert('Gagal membuat PDF. Kesalahan: ' + error.message, 'danger');
         });
-    }, 200); // Jeda 200 milidetik
+    }, 500); // Jeda 500 milidetik
 }
 
 // =============================================================================
@@ -2885,8 +3075,6 @@ function initializeLaporanPage() {
     document.getElementById('laporanDariTahun').value = pastDate.getFullYear();
     document.getElementById('laporanSampaiBulan').value = String(currentDate.getMonth() + 1).padStart(2, '0');
     document.getElementById('laporanSampaiTahun').value = currentDate.getFullYear();
-    
-    tampilkanLaporanDanGrafik();
 }
 
 function populateLaporanDateDropdowns() {
