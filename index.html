@@ -1,129 +1,69 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Aplikasi Pelanggaran Siswa — v2.3.5 (Optimized)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Aplikasi Pelanggaran Siswa | Penanganan 3 Level Profesional</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-      
   <style>
-    :root{--brand:#0d6efd;--muted:#6c757d;--yellow-bg:#fff9c4}
-    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:#f5f7fb; font-size: 0.9rem;}
+    :root{--brand:#0d6efd;--yellow-bg:#fff9c4}
+    body{font-family:system-ui,Segoe UI,Roboto;background:#f5f7fb;font-size:0.9rem;}
     .app{display:flex;min-height:100vh}
-    .sidebar{width:260px;background:var(--brand);color:#fff;flex-shrink:0;transition:transform .25s ease-in-out; position: fixed; z-index: 1050; height: 100vh; overflow-y: auto;}
-    .sidebar .logo{height:72px;padding:16px;display:flex;align-items:center;gap:12px}
-    .sidebar .logo img{height:48px;width:48px;object-fit:cover;border-radius:6px;border:2px solid rgba(255,255,255,.15)}
-    .sidebar .menu{padding:8px 12px}
-    .sidebar .menu a{display:flex;justify-content:space-between;align-items:center;color:#fff;text-decoration:none;padding:8px;border-radius:6px}
-    .sidebar .menu a:hover{background:rgba(255,255,255,0.06)}
-    .sidebar .submenu { padding-left: 20px; }
-    .sidebar .submenu a { font-size: 0.85rem; padding: 6px; }
-    .sidebar .school-info{padding:12px;background:rgba(255,255,255,0.03);margin:8px;border-radius:8px}
+    .sidebar{width:260px;background:var(--brand);color:#fff;position:fixed;height:100vh;overflow-y:auto;transition:transform .25s;z-index:1050}
     .sidebar.collapsed{transform:translateX(-280px)}
-    .main{flex:1;padding:10px;}
+    .sidebar .logo{padding:16px;display:flex;align-items:center;gap:12px}
+    .sidebar .menu{padding:8px 12px}
+    .sidebar .menu a{display:flex;justify-content:space-between;color:#fff;text-decoration:none;padding:8px;border-radius:6px}
+    .sidebar .menu a:hover{background:rgba(255,255,255,0.1)}
+    .main{flex:1;padding:10px;margin-left:260px}
+    .sidebar.collapsed+.main{margin-left:0}
     .topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    .hamburger{background:transparent;border:0;color:var(--brand);font-size:24px; cursor:pointer; padding: 5px;}
-    .card{box-shadow:0 6px 18px rgba(20,30,60,0.06); margin-bottom: 0.8rem;}
-    .logo-preview{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e6eefc}
-    .alert-area{position:fixed;right:10px;top:10px;z-index:2000;}
-    
-    .form-control, .form-select { background-color: var(--yellow-bg); }
-    
-    /* Scrollbar custom */
-    .violation-history-list { max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 8px; background: #f8f9fa; font-size: 0.85rem; }
-    
-    /* Search Dropdown */
-    .search-dropdown{position:absolute;width:100%;max-height:200px;overflow-y:auto;background:white;border:1px solid #ced4da;border-top:none;border-radius:0 0 0.375rem 0.375rem;z-index:1000;box-shadow:0 4px 8px rgba(0,0,0,0.1)}
-    .search-dropdown .dropdown-item{padding:8px 12px;cursor:pointer;}
-    .search-dropdown .dropdown-item:hover{background-color:#f8f9fa}
+    .hamburger{background:transparent;border:0;color:var(--brand);font-size:24px;cursor:pointer}
+    .card{box-shadow:0 4px 12px rgba(0,0,0,0.05);margin-bottom:1rem}
+    .nav-tabs .nav-link{font-weight:500;cursor:pointer}
+    .form-control,.form-select{background-color:var(--yellow-bg)}
     .search-container{position:relative}
-
-    /* Foto bukti penanganan */
-    .handling-photo-preview{width:100px;height:100px;object-fit:cover;border-radius:6px;border:1px solid #dee2e6;margin-top:8px;}
-    .handling-photo-container{border:2px dashed #dee2e6;border-radius:8px;padding:12px;text-align:center;background:#f8f9fa;}
-
-    @media(max-width:768px) {
-        body { font-size: 0.85rem; }
-        .sidebar { position: fixed; }
-        .main { padding: 8px; }
-    }
-    
-    @media(min-width:992px) {
-        .sidebar { position: relative; height: auto; }
-        .main { margin-left: 0; }
-    }
-    
-    /* Print Styles */
-    @media print {
-        body { background: white; }
-        .app, .sidebar, .topbar, .no-print, .btn { display: none !important; }
-    }
-    
-    /* Custom Print Frame Styles */
-    .print-body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; padding: 20mm; }
-    .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
-    .print-title { text-transform: uppercase; font-weight: bold; font-size: 14pt; margin-top: 15px; text-decoration: underline; text-align: center; }
-    .print-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11pt; }
-    .print-table th, .print-table td { border: 1px solid #000; padding: 5px 10px; text-align: left; }
-    .print-table th { background-color: #f0f0f0; text-align: center; }
-    .signature-row { display: flex; justify-content: space-between; margin-top: 60px; width: 100%; }
-    .signature-item { width: 30%; text-align: center; }
-    .signature-space { height: 60px; }
-    .pledge-box { border: 2px solid #000; padding: 15px; margin: 20px 0; background-color: #f9f9f9; }
-    .print-photo { max-width: 100%; max-height: 200px; border: 1px solid #000; margin: 10px 0; }
+    .search-dropdown{position:absolute;width:100%;max-height:200px;overflow-y:auto;background:white;border:1px solid #ced4da;border-top:none;border-radius:0 0 0.375rem 0.375rem;z-index:1000}
+    .search-dropdown .dropdown-item{padding:8px 12px;cursor:pointer}
+    .handling-photo-preview{width:100px;height:100px;object-fit:cover;border-radius:6px;margin-top:8px}
+    @media(max-width:768px){.main{margin-left:0}.sidebar{position:fixed}}
   </style>
 </head>
 <body>
-<div class="alert-area" id="alertArea"></div>
+<div id="alertArea" style="position:fixed;right:10px;top:10px;z-index:2000"></div>
 <div class="app">
   <aside id="sidebar" class="sidebar collapsed">
     <div class="logo">
-      <img id="schoolLogoSmall" src="" alt="logo" onerror="this.style.display='none'">
-      <div>
-        <div style="font-weight:700">Aplikasi Pelanggaran</div>
-        <div style="font-size:.85rem;opacity:.9">Sekolah</div>
-      </div>
+      <img id="schoolLogoSmall" src="" alt="logo" style="height:48px;width:48px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">
+      <div><div style="font-weight:700">Aplikasi Pelanggaran</div><div style="font-size:.8rem">Sekolah</div></div>
     </div>
     <div style="padding:0 12px 8px 12px">
-      <div class="school-info" id="schoolInfo">
+      <div class="school-info" style="padding:12px;background:rgba(255,255,255,0.03);border-radius:8px">
         <div style="font-weight:600" id="si_name">Nama Sekolah</div>
-        <div style="font-size:.85rem;color:rgba(255,255,255,0.9)" id="si_address">Alamat</div>
+        <div style="font-size:.85rem" id="si_address">Alamat</div>
       </div>
     </div>
     <nav class="menu">
-      <div class="section mb-2">
-        <a href="#" onclick="showPage('identitas')">Identitas Sekolah <span>›</span></a>
-        <a href="#" onclick="showPage('data_siswa')">Data Siswa <span>›</span></a>
-        <a href="#" onclick="showPage('pelanggaran')">Pelanggaran <span>›</span></a>
-        <a href="#" onclick="showPage('rekap_pelanggaran')">Rekap <span>›</span></a>
-        <a href="#" onclick="showPage('penanganan_siswa')" style="background: rgba(255,255,255,0.1);">
-            <span><i class="fas fa-user-shield me-2"></i>Penanganan</span> <span>›</span>
-        </a>
-        <a href="#" onclick="toggleLaporanSubmenu(event)">Laporan <span>▼</span></a>
-        <div id="laporanSubmenu" class="submenu" style="display: none;">
-          <a href="#" onclick="showPage('laporan_ranking')">Ranking <span>›</span></a>
-          <a href="#" onclick="showPage('laporan_tren')">Tren <span>›</span></a>
-        </div>
-        <a href="#" onclick="showPage('pengaturan')">Pengaturan <span>›</span></a>
-      </div>
+      <a href="#" onclick="showPage('identitas')">Identitas Sekolah</a>
+      <a href="#" onclick="showPage('data_siswa')">Data Siswa</a>
+      <a href="#" onclick="showPage('pelanggaran')">Pencatatan Pelanggaran</a>
+      <a href="#" onclick="showPage('rekap')">Rekap Pelanggaran</a>
+      <a href="#" onclick="showPage('penanganan')" style="background:rgba(255,255,255,0.1)">Penanganan 3 Level</a>
+      <a href="#" onclick="showPage('pengaturan')">Pengaturan</a>
     </nav>
-    <div style="padding:12px;color:rgba(255,255,255,0.7);font-size:.82rem">v2.3.5 Fast</div>
   </aside>
 
   <main class="main">
     <div class="topbar">
-      <button id="btnToggle" class="hamburger" title="Menu">☰</button>
-      <h5 class="mb-0" id="pageTitle">Identitas Sekolah</h5>
+      <button id="btnToggle" class="hamburger">☰</button>
+      <h5 id="pageTitle">Identitas Sekolah</h5>
     </div>
 
-    <!-- Pages -->
+    <!-- HALAMAN IDENTITAS SEKOLAH -->
     <div id="page_identitas" class="page">
-      <div class="card p-3 mb-3">
+      <div class="card p-3">
         <h6>Identitas Sekolah</h6>
         <div class="row g-2">
           <div class="col-md-6"><label class="form-label">Nama Sekolah</label><input id="si_input_name" class="form-control"></div>
@@ -132,8 +72,8 @@
           <div class="col-md-6"><label class="form-label">Waka Kesiswaan</label><input id="si_input_waka" class="form-control"></div>
           <div class="col-12"><label class="form-label">Logo</label>
             <div class="d-flex gap-2 align-items-center">
-              <label class="btn btn-sm btn-outline-secondary mb-0">Pilih Logo<input id="si_logo_input" type="file" accept="image/*" hidden onchange="previewLogo(event)"></label>
-              <img id="si_logo_preview" class="logo-preview" src="" alt="preview"/>
+              <label class="btn btn-sm btn-outline-secondary">Pilih Logo<input id="si_logo_input" type="file" accept="image/*" hidden onchange="previewLogo(event)"></label>
+              <img id="si_logo_preview" class="logo-preview" style="width:56px;height:56px;object-fit:cover;border-radius:6px" src="">
             </div>
           </div>
           <div class="col-12 text-end mt-2"><button class="btn btn-primary" onclick="saveSchoolInfo()">Simpan</button></div>
@@ -141,23 +81,29 @@
       </div>
     </div>
 
+    <!-- HALAMAN DATA SISWA -->
     <div id="page_data_siswa" class="page d-none">
-       <div class="card p-3 mb-3">
+      <div class="card p-3">
         <div class="d-flex justify-content-between align-items-start mb-2">
-            <div><h6 class="mb-0">Data Siswa</h6></div>
-            <div class="d-flex gap-2">
-              <button class="btn btn-sm btn-outline-secondary" onclick="openAddStudent()">Tambah</button>
-              <label class="btn btn-sm btn-primary mb-0">Import Excel<input id="uploadXlsx" type="file" accept=".xlsx,.xls" hidden onchange="handleUploadXLSX(event)"></label>
-            </div>
+          <h6 class="mb-0">Data Siswa</h6>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="openAddStudent()">Tambah</button>
+            <label class="btn btn-sm btn-primary mb-0">Import Excel<input id="uploadXlsx" type="file" accept=".xlsx,.xls" hidden onchange="handleUploadXLSX(event)"></label>
+          </div>
         </div>
         <div class="search-container mb-2">
-            <input id="searchStudent" class="form-control form-control-sm" placeholder="Cari siswa..." oninput="debounce(renderStudentsTable, 300)()">
-            <div id="studentSearchDropdownTable" class="search-dropdown d-none"></div>
+          <input id="searchStudent" class="form-control form-control-sm" placeholder="Cari siswa..." oninput="renderStudentsTable()">
         </div>
-        <div style="max-height:420px;overflow:auto"><table class="table table-sm table-hover" id="studentsTable"><thead class="table-light"><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Point</th><th>Aksi</th></tr></thead><tbody></tbody></table></div>
+        <div style="max-height:420px;overflow:auto">
+          <table class="table table-sm table-hover" id="studentsTable">
+            <thead class="table-light"><tr><th>NIS</th><th>Nama</th><th>Kelas</th><th>Point</th><th>Aksi</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
+    <!-- HALAMAN PENCATATAN PELANGGARAN -->
     <div id="page_pelanggaran" class="page d-none">
       <div class="card p-3 mb-3">
         <h6>Pencatatan Pelanggaran</h6>
@@ -174,18 +120,22 @@
           <div class="col-md-3"><label class="form-label">Tanggal</label><input id="viDate" type="date" class="form-control"></div>
           <div class="col-md-3"><label class="form-label">Point</label><input id="viPoints" class="form-control" readonly></div>
           <div class="col-12"><label class="form-label">Keterangan</label><input id="viNote" class="form-control"></div>
-          <div class="col-12 text-end mt-2">
-            <button class="btn btn-primary" onclick="addViolation()">Catat Pelanggaran</button>
-          </div>
+          <div class="col-12 text-end mt-2"><button class="btn btn-primary" onclick="addViolation()">Catat Pelanggaran</button></div>
         </div>
       </div>
       <div class="card p-3">
         <h6>Riwayat Pelanggaran Terbaru</h6>
-        <div style="max-height:320px;overflow:auto"><table class="table table-sm" id="violationsTable"><thead class="table-light"><tr><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Point</th><th>#</th></tr></thead><tbody></tbody></table></div>
+        <div style="max-height:320px;overflow:auto">
+          <table class="table table-sm" id="violationsTable">
+            <thead class="table-light"><tr><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Point</th><th>#</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div id="page_rekap_pelanggaran" class="page d-none">
+    <!-- HALAMAN REKAP PELANGGARAN -->
+    <div id="page_rekap" class="page d-none">
       <div class="card p-3 mb-3">
         <h6>Rekap Data Pelanggaran</h6>
         <div class="row g-2 align-items-end">
@@ -197,201 +147,64 @@
             </select>
           </div>
           <div id="rekapSiswaContainer" class="col-md-6">
-              <label class="form-label">Cari Siswa</label>
-              <div class="search-container">
-                <input id="rekapSiswaSearch" class="form-control" placeholder="Ketik nama" oninput="handleRekapSiswaSearchInput(event)">
-                <div id="rekapSiswaSearchDropdown" class="search-dropdown d-none"></div>
-              </div>
+            <label class="form-label">Cari Siswa</label>
+            <input id="rekapSiswaSearch" class="form-control" placeholder="Ketik nama">
           </div>
-          <div class="col-md-12 text-end mt-2">
-            <button class="btn btn-primary" onclick="tampilkanRekap()">Tampilkan</button>
-            <button class="btn btn-success" onclick="exportRekapExcel()" id="btnExportRekap" style="display:none;">Export Excel</button>
-          </div>
+          <div class="col-md-12 text-end mt-2"><button class="btn btn-primary" onclick="tampilkanRekap()">Tampilkan</button></div>
         </div>
       </div>
       <div id="rekapArea" class="card p-3"><p class="text-muted">Pilih jenis laporan.</p></div>
     </div>
 
-    <!-- Page: Penanganan Siswa -->
-    <div id="page_penanganan_siswa" class="page d-none">
-      <div class="card p-3 mb-3">
-        <h6><i class="fas fa-user-shield me-2"></i>Penanganan Siswa Khusus (Poin > 200)</h6>
-        <div class="table-responsive">
-            <table class="table table-sm table-hover" id="penangananTable">
-                <thead class="table-light"><tr><th>No</th><th>Nama</th><th>Kelas</th><th>Total Poin</th><th>Status</th><th>Aksi</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Page: Laporan Ranking -->
-    <div id="page_laporan_ranking" class="page d-none">
-      <div class="card p-3 mb-3">
-        <h6>Laporan Ranking Pelanggaran</h6>
-        <div class="row g-2 align-items-end">
-          <div class="col-md-3">
-            <select id="rankingPeriod" class="form-select" onchange="handleRankingPeriodChange()">
-              <option value="tahunan">Tahunan</option>
-              <option value="custom">Custom</option>
-            </select>
-          </div>
-          <div id="rankingCustomFields" style="display: none;">
-            <div class="row g-2">
-              <div class="col-md-3">
-                <input type="number" id="rankingStartYear" class="form-control" placeholder="Tahun Mulai" min="2020" max="2030" value="2026">
-              </div>
-              <div class="col-md-3">
-                <input type="number" id="rankingEndYear" class="form-control" placeholder="Tahun Akhir" min="2020" max="2030" value="2026">
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <select id="rankingKelas" class="form-select"><option value="">Semua Kelas</option></select>
-          </div>
-          <div class="col-md-12 text-end mt-2">
-            <button class="btn btn-primary" onclick="tampilkanRankingSiswa()">Tampilkan</button>
-            <button class="btn btn-success" onclick="exportRankingExcel()">Export Excel</button>
-          </div>
-        </div>
-      </div>
+    <!-- HALAMAN PENANGANAN 3 LEVEL -->
+    <div id="page_penanganan" class="page d-none">
       <div class="card p-3">
-        <div style="max-height: 500px; overflow: auto;">
-          <table class="table table-sm" id="rankingSiswaTable">
-            <thead class="table-light">
-              <tr><th>Rank</th><th>NIS</th><th>Nama</th><th>Kelas</th><th>Total Poin</th><th>#</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <h5><i class="fas fa-chart-line me-2"></i>Penanganan Siswa Berdasarkan Level Poin</h5>
+        <ul class="nav nav-tabs mt-3" id="penangananTabs">
+          <li class="nav-item"><a class="nav-link active" data-level="1" onclick="switchPenangananTab(1)">🔴 Penanganan I (100-150)</a></li>
+          <li class="nav-item"><a class="nav-link" data-level="2" onclick="switchPenangananTab(2)">🟠 Penanganan II (151-200)</a></li>
+          <li class="nav-item"><a class="nav-link" data-level="3" onclick="switchPenangananTab(3)">⚫ Penanganan III (≥201)</a></li>
+        </ul>
+        <div class="tab-content mt-3">
+          <div id="penangananTab1"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>No</th><th>Nama</th><th>Kelas</th><th>Total Poin</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="penangananTableBody1"></tbody></table></div>
+          <div id="penangananTab2" class="d-none"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>No</th><th>Nama</th><th>Kelas</th><th>Total Poin</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="penangananTableBody2"></tbody></table></div>
+          <div id="penangananTab3" class="d-none"><table class="table table-sm table-hover"><thead class="table-light"><tr><th>No</th><th>Nama</th><th>Kelas</th><th>Total Poin</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="penangananTableBody3"></tbody></table></div>
         </div>
       </div>
     </div>
 
-    <!-- Page: Laporan Tren -->
-    <div id="page_laporan_tren" class="page d-none">
-      <div class="card p-3 mb-3">
-        <h6>Laporan Tren Pelanggaran</h6>
-        <div class="row g-2 align-items-end">
-          <div class="col-md-3">
-            <select id="laporanType" class="form-select" onchange="handleLaporanTypeChange()">
-              <option value="semua-kelas">Semua Kelas</option>
-              <option value="per-siswa">Per Siswa</option>
-            </select>
-          </div>
-          <div id="laporanSiswaContainer" class="col-md-3 d-none">
-              <input id="laporanSiswaSearch" class="form-control" placeholder="Cari Siswa" oninput="handleLaporanSiswaSearchInput(event)">
-              <div id="laporanSiswaSearchDropdown" class="search-dropdown d-none"></div>
-          </div>
-          <div class="col-md-12 text-end mt-2">
-            <button class="btn btn-primary" onclick="tampilkanLaporanDanGrafik()">Tampilkan</button>
-          </div>
-        </div>
-      </div>
-      <div class="card p-3">
-        <div style="height: 400px; position: relative;"><canvas id="trendChart"></canvas></div>
-      </div>
-    </div>
-
+    <!-- HALAMAN PENGATURAN -->
     <div id="page_pengaturan" class="page d-none">
       <div class="card p-3 mb-3">
         <h6>Backup & Restore</h6>
         <div class="d-flex gap-2">
-            <button class="btn btn-success" onclick="exportJSON()">Backup JSON</button>
-            <label class="btn btn-info mb-0">Restore JSON<input type="file" accept=".json" hidden onchange="handleImportJSON(event)"></label>
-            <button class="btn btn-danger" onclick="resetAll()">Reset Data</button>
+          <button class="btn btn-success" onclick="exportJSON()">Backup JSON</button>
+          <label class="btn btn-info mb-0">Restore JSON<input type="file" accept=".json" hidden onchange="handleImportJSON(event)"></label>
+          <button class="btn btn-danger" onclick="resetAll()">Reset Data</button>
         </div>
       </div>
-      
-      <div class="card p-3 mb-3">
-        <h6><i class="fas fa-exclamation-triangle me-2"></i>Kelola Jenis Pelanggaran</h6>
+      <div class="card p-3">
+        <h6>Kelola Jenis Pelanggaran</h6>
         <div class="row g-2 align-items-end">
-          <div class="col-md-6">
-            <label class="form-label">Nama Pelanggaran</label>
-            <input id="newViolationTypeName" class="form-control" placeholder="Contoh: Membawa HP">
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Point</label>
-            <input id="newViolationTypePoints" type="number" class="form-control" placeholder="5" min="1">
-          </div>
-          <div class="col-md-2">
-            <button class="btn btn-primary w-100" onclick="addViolationType()">Tambah</button>
-          </div>
+          <div class="col-md-6"><label class="form-label">Nama Pelanggaran</label><input id="newViolationTypeName" class="form-control" placeholder="Contoh: Membawa HP"></div>
+          <div class="col-md-4"><label class="form-label">Point</label><input id="newViolationTypePoints" type="number" class="form-control" placeholder="5" min="1"></div>
+          <div class="col-md-2"><button class="btn btn-primary w-100" onclick="addViolationType()">Tambah</button></div>
         </div>
         <div class="mt-3">
           <table class="table table-sm">
-            <thead class="table-light">
-              <tr>
-                <th>No</th>
-                <th>Jenis Pelanggaran</th>
-                <th>Point</th>
-                <th>Aksi</th>
-              </tr>
-            </thead>
+            <thead class="table-light"><tr><th>No</th><th>Jenis Pelanggaran</th><th>Point</th><th>Aksi</th></tr></thead>
             <tbody id="violationTypesTableBody"></tbody>
           </table>
         </div>
       </div>
     </div>
-
   </main>
 </div>
 
-<!-- Modal Penanganan -->
-<div class="modal fade" id="penangananModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white"><h5 class="modal-title">Form Penanganan & Perjanjian</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <input type="hidden" id="penanganan_nis">
-                <p><strong>Nama:</strong> <span id="penanganan_nama"></span></p>
-            </div>
-            <div class="col-md-6 text-md-end">
-                <p><strong>Total Poin:</strong> <span class="text-danger fw-bold" id="penanganan_total_poin"></span></p>
-            </div>
-        </div>
-        <h6>1. Riwayat Pelanggaran:</h6>
-        <div class="violation-history-list mb-3" id="penangananHistoryList"></div>
-        <h6>2. Tindakan:</h6>
-        <div class="row g-2 mb-3">
-            <div class="col-md-6"><label class="form-label">Tanggal</label><input type="date" id="penanganan_date" class="form-control"></div>
-            <div class="col-12"><label class="form-label">Keterangan</label><textarea id="penanganan_notes" class="form-control" rows="2"></textarea></div>
-            
-            <div class="col-12 mt-2">
-              <label class="form-label fw-bold">Upload Foto Bukti Penanganan</label>
-              <div class="handling-photo-container">
-                <label class="btn btn-outline-primary mb-2">
-                  <i class="fas fa-camera me-2"></i>Pilih Foto
-                  <input type="file" id="penanganan_photo" accept="image/*" hidden onchange="previewHandlingPhoto(event)">
-                </label>
-                <div id="handlingPhotoPreviewContainer" style="display: none;">
-                  <img id="handlingPhotoPreview" class="handling-photo-preview" src="" alt="Preview foto bukti">
-                  <button type="button" class="btn btn-sm btn-link text-danger" onclick="clearHandlingPhoto()"><i class="fas fa-times"></i> Hapus</button>
-                </div>
-                <div id="handlingPhotoEmptyState" class="text-muted small">
-                  <i class="fas fa-info-circle me-1"></i>Belum ada foto dipilih
-                </div>
-              </div>
-            </div>
-        </div>
-        <div class="alert alert-warning p-2 small">
-            <input type="checkbox" id="checkPernyataan" class="me-2">
-            <label for="checkPernyataan" class="fw-bold">Siswa berjanji tidak mengulangi pelanggaran.</label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-        <button class="btn btn-primary" onclick="cetakBuktiPenanganan()"><i class="fas fa-print me-1"></i> Simpan & Cetak</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Siswa -->
+<!-- MODAL SISWA -->
 <div class="modal fade" id="studentModal" tabindex="-1">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title">Tambah Siswa</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-header"><h5 class="modal-title">Tambah/Edit Siswa</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <input type="hidden" id="s_original_nis">
       <div class="mb-2"><label>NIS</label><input id="s_nis" class="form-control"></div>
@@ -403,1681 +216,478 @@
   </div></div>
 </div>
 
-<div class="modal fade" id="detailPelanggaranModal" tabindex="-1">
-  <div class="modal-dialog modal-lg"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title">Detail Pelanggaran</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body" id="detailPelanggaranContent"></div>
-  </div></div>
+<!-- MODAL PENANGANAN -->
+<div class="modal fade" id="penangananModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-hand-paper me-2"></i>Form Penanganan</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="penanganan_nis">
+        <input type="hidden" id="penanganan_level">
+        <div class="row mb-3">
+          <div class="col-md-6"><strong>Nama:</strong> <span id="penanganan_nama"></span></div>
+          <div class="col-md-6"><strong>Total Poin:</strong> <span id="penanganan_total_poin" class="text-danger fw-bold"></span></div>
+        </div>
+        <h6>Riwayat Pelanggaran:</h6>
+        <div id="penangananHistoryList" style="max-height:200px;overflow:auto;border:1px solid #ddd;padding:8px;border-radius:6px;background:#f8f9fa;margin-bottom:12px"></div>
+        <div class="mb-2"><label class="form-label">Tanggal Penanganan</label><input type="date" id="penanganan_date" class="form-control"></div>
+        <div class="mb-2"><label class="form-label">Keterangan / Tindakan</label><textarea id="penanganan_notes" rows="2" class="form-control"></textarea></div>
+        <div class="mb-2"><label class="form-label">Foto Bukti</label>
+          <div style="border:2px dashed #ccc;border-radius:8px;padding:12px;text-align:center">
+            <label class="btn btn-outline-primary btn-sm"><i class="fas fa-camera me-1"></i> Pilih Foto<input type="file" id="penanganan_photo" accept="image/*" hidden onchange="previewHandlingPhoto(event)"></label>
+            <div id="handlingPhotoPreviewContainer" style="display:none;margin-top:8px"><img id="handlingPhotoPreview" style="width:100px;height:100px;object-fit:cover;border-radius:6px"><br><button type="button" class="btn btn-sm btn-link text-danger" onclick="clearHandlingPhoto()">Hapus Foto</button></div>
+            <div id="handlingPhotoEmptyState" class="text-muted small mt-2">Belum ada foto</div>
+          </div>
+        </div>
+        <div class="alert alert-warning mt-2"><input type="checkbox" id="checkPernyataan" class="me-2"><label>Siswa berjanji tidak akan mengulangi pelanggaran</label></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button class="btn btn-primary" onclick="simpanDanCetakPenanganan()"><i class="fas fa-print me-1"></i> Simpan & Cetak</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<script>
+// ==================== DATA GLOBAL ====================
+let students = [];
+let violationTypes = [{id:1,name:'Terlambat',points:5},{id:2,name:'Tidak Pakai Seragam',points:10},{id:3,name:'Bolos',points:20},{id:4,name:'Bullying',points:50},{id:5,name:'Berkelahi',points:50}];
+let violations = [];
+let studentHandling = [];
+let pointsMap = {};
+let handlingMap = {};
+
+function showAlert(msg, type='success'){ const a=document.getElementById('alertArea'); const d=document.createElement('div'); d.className=`alert alert-${type} alert-dismissible fade show`; d.innerHTML=`${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`; a.appendChild(d); setTimeout(()=>d.remove(),3000); }
+function escapeHtml(s){ return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatDate(ds){ if(!ds) return '-'; return new Date(ds).toLocaleDateString('id-ID'); }
+function saveStudents(){ localStorage.setItem('students', JSON.stringify(students)); }
+function saveViolations(){ localStorage.setItem('violations', JSON.stringify(violations)); }
+function saveViolationTypes(){ localStorage.setItem('violation_types', JSON.stringify(violationTypes)); }
+function saveStudentHandling(){ localStorage.setItem('student_handling', JSON.stringify(studentHandling)); }
+
+function recalculateCaches(){
+  pointsMap = {};
+  violations.forEach(v => { pointsMap[v.studentNis] = (pointsMap[v.studentNis] || 0) + v.points; });
+  handlingMap = {};
+  studentHandling.forEach(h => { handlingMap[`${h.nis}|${h.level}`] = true; });
+}
+
+// ==================== IDENTITAS SEKOLAH ====================
+function loadSchoolInfo(){
+  const i = JSON.parse(localStorage.getItem('school_info')||'{"name":"SMK NEGERI 1 JAKARTA","address":"Jl. Pendidikan No. 123, Jakarta","kepala":"Drs. Ahmad Fauzi, M.Pd","waka":"Budi Santoso, S.Pd"}');
+  document.getElementById('si_input_name').value=i.name;
+  document.getElementById('si_input_address').value=i.address;
+  document.getElementById('si_input_kepala').value=i.kepala;
+  document.getElementById('si_input_waka').value=i.waka;
+  document.getElementById('si_logo_preview').src=i.logo||'';
+  document.getElementById('schoolLogoSmall').src=i.logo||'';
+  document.getElementById('si_name').textContent=i.name;
+  document.getElementById('si_address').textContent=i.address;
+}
+function saveSchoolInfo(){
+  localStorage.setItem('school_info', JSON.stringify({
+    name: document.getElementById('si_input_name').value,
+    address: document.getElementById('si_input_address').value,
+    kepala: document.getElementById('si_input_kepala').value,
+    waka: document.getElementById('si_input_waka').value,
+    logo: document.getElementById('si_logo_preview').src
+  }));
+  loadSchoolInfo(); showAlert('Data sekolah tersimpan!');
+}
+function previewLogo(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=(ev)=>{ document.getElementById('si_logo_preview').src=ev.target.result; }; r.readAsDataURL(f); }
+
+// ==================== DATA SISWA ====================
+function renderStudentsTable(){
+  const tbody = document.querySelector('#studentsTable tbody');
+  const term = document.getElementById('searchStudent')?.value.toLowerCase() || '';
+  let html = '';
+  students.filter(s => s.nama.toLowerCase().includes(term) || s.nis.includes(term)).forEach(s => {
+    const pts = pointsMap[s.nis] || 0;
+    html += `<tr><td>${s.nis}</td><td>${escapeHtml(s.nama)}</td><td>${escapeHtml(s.kelas)}</td><td><span class="badge bg-${pts>150?'danger':pts>20?'warning':'success'}">${pts}</span></td><td><button class="btn btn-sm btn-outline-primary me-1" onclick="editStudent('${s.nis}')">Edit</button><button class="btn btn-sm btn-outline-danger" onclick="deleteStudent('${s.nis}')">Hapus</button></td></tr>`;
+  });
+  tbody.innerHTML = html;
+}
+function openAddStudent(){
+  document.getElementById('s_original_nis').value='';
+  document.getElementById('s_nis').value='';
+  document.getElementById('s_nama').value='';
+  document.getElementById('s_kelas').value='';
+  document.getElementById('s_ortu').value='';
+  new bootstrap.Modal(document.getElementById('studentModal')).show();
+}
+function editStudent(nis){
+  const s = students.find(x=>x.nis===nis);
+  if(s){ document.getElementById('s_original_nis').value=s.nis; document.getElementById('s_nis').value=s.nis; document.getElementById('s_nama').value=s.nama; document.getElementById('s_kelas').value=s.kelas; document.getElementById('s_ortu').value=s.ortu||''; new bootstrap.Modal(document.getElementById('studentModal')).show(); }
+}
+function saveStudent(){
+  const onis = document.getElementById('s_original_nis').value;
+  const nis = document.getElementById('s_nis').value.trim();
+  const nama = document.getElementById('s_nama').value.trim();
+  const kelas = document.getElementById('s_kelas').value.trim();
+  const ortu = document.getElementById('s_ortu').value.trim();
+  if(!nis || !nama){ showAlert('NIS & Nama wajib!','danger'); return; }
+  if(onis){ const idx=students.findIndex(x=>x.nis===onis); if(idx!==-1) students[idx]={nis,nama,kelas,ortu}; }
+  else { if(students.find(x=>x.nis===nis)){ showAlert('NIS sudah ada!','danger'); return; } students.push({nis,nama,kelas,ortu}); }
+  saveStudents(); recalculateCaches(); renderStudentsTable(); bootstrap.Modal.getInstance(document.getElementById('studentModal')).hide(); showAlert('Data siswa tersimpan!');
+}
+function deleteStudent(nis){ if(confirm('Hapus siswa ini?')){ students=students.filter(s=>s.nis!==nis); violations=violations.filter(v=>v.studentNis!==nis); saveStudents(); saveViolations(); recalculateCaches(); renderStudentsTable(); showAlert('Siswa dihapus!'); } }
+function handleUploadXLSX(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=function(ev){ const data=new Uint8Array(ev.target.result); const workbook=XLSX.read(data,{type:'array'}); const sheet=workbook.Sheets[workbook.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(sheet); rows.forEach(row=>{ const nis=row.NIS||row.nis||''; const nama=row.Nama||row.nama||''; const kelas=row.Kelas||row.kelas||''; if(nis && nama && !students.find(s=>s.nis===nis)) students.push({nis,nama,kelas,ortu:''}); }); saveStudents(); recalculateCaches(); renderStudentsTable(); showAlert('Import berhasil!'); }; reader.readAsArrayBuffer(file); }
+
+// ==================== PELANGGARAN ====================
+function populateViolationTypes(){
+  const sel = document.getElementById('viType');
+  sel.innerHTML = violationTypes.map(t=>`<option value="${t.id}">${t.name} (${t.points}p)</option>`).join('');
+  if(violationTypes.length){ document.getElementById('viPoints').value = violationTypes[0].points; sel.onchange = function(){ const t=violationTypes.find(x=>x.id==this.value); document.getElementById('viPoints').value=t?t.points:''; }; }
+}
+function handleStudentSearchInput(e){
+  const dropdown = document.getElementById('studentSearchDropdown');
+  const term = e.target.value.toLowerCase().trim();
+  if(term.length<1){ dropdown.classList.add('d-none'); return; }
+  const filtered = students.filter(s => s.nama.toLowerCase().includes(term) || s.nis.includes(term));
+  dropdown.innerHTML = filtered.slice(0,5).map(s => `<div class="dropdown-item" onclick="selectStudentForViolation('${s.nis}')">${s.nis} - ${s.nama}</div>`).join('');
+  dropdown.classList.remove('d-none');
+}
+function selectStudentForViolation(nis){ const s=students.find(x=>x.nis===nis); if(s){ document.getElementById('viStudentSelected').value=`${s.nis} - ${s.nama}`; document.getElementById('viStudentSearch').value=''; document.getElementById('studentSearchDropdown').classList.add('d-none'); } }
+function addViolation(){
+  const nisText = document.getElementById('viStudentSelected').value;
+  if(!nisText){ showAlert('Pilih siswa dulu!','danger'); return; }
+  const nis = nisText.split(' - ')[0];
+  const student = students.find(s=>s.nis===nis);
+  const typeId = parseInt(document.getElementById('viType').value);
+  const type = violationTypes.find(t=>t.id===typeId);
+  const date = document.getElementById('viDate').value;
+  const note = document.getElementById('viNote').value;
+  if(!student || !type || !date){ showAlert('Data tidak lengkap','danger'); return; }
+  violations.push({ id: Date.now(), studentNis: nis, studentName: student.nama, studentClass: student.kelas, typeId: type.id, typeName: type.name, points: type.points, date: date, note: note });
+  saveViolations(); recalculateCaches(); renderViolationsTable(); document.getElementById('viNote').value=''; document.getElementById('viStudentSelected').value=''; showAlert('Pelanggaran tercatat!');
+}
+function renderViolationsTable(){
+  const tbody = document.querySelector('#violationsTable tbody');
+  let rows = '';
+  [...violations].sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(v => { rows += `<tr><td>${formatDate(v.date)}</td><td>${v.studentName}</td><td>${v.typeName}</td><td>${v.points}</td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteViolation(${v.id})">Hapus</button></td></tr>`; });
+  tbody.innerHTML = rows;
+}
+function deleteViolation(id){ violations=violations.filter(v=>v.id!==id); saveViolations(); recalculateCaches(); renderViolationsTable(); showAlert('Pelanggaran dihapus!'); }
+
+// ==================== REKAP ====================
+function handleRekapTypeChange(){ document.getElementById('rekapSiswaContainer').classList.toggle('d-none', document.getElementById('rekapType').value !== 'per-siswa'); }
+function tampilkanRekap(){
+  const type = document.getElementById('rekapType').value;
+  const area = document.getElementById('rekapArea');
+  if(type==='per-siswa'){
+    const term = document.getElementById('rekapSiswaSearch').value;
+    const nis = term.split(' - ')[0];
+    const s = students.find(x=>x.nis===nis);
+    if(!s){ area.innerHTML='<p class="text-danger">Pilih siswa terlebih dahulu</p>'; return; }
+    const sv = violations.filter(v=>v.studentNis===nis);
+    const total = pointsMap[nis]||0;
+    area.innerHTML = `<h5>${escapeHtml(s.nama)}</h5><p>Total Poin: <strong>${total}</strong></p><table class="table table-sm"><thead><tr><th>Tgl</th><th>Jenis</th><th>Poin</th></tr></thead><tbody>${sv.map(v=>`<tr><td>${formatDate(v.date)}</td><td>${v.typeName}</td><td>${v.points}</td></tr>`).join('')}</tbody></table>`;
+  } else { area.innerHTML = '<p>Semua data pelanggaran. Gunakan menu Laporan untuk analisis lengkap.</p>'; }
+}
+
+// ==================== PENANGANAN 3 LEVEL ====================
+function renderPenangananTable(level){
+  const tbody = document.getElementById(`penangananTableBody${level}`);
+  if(!tbody) return;
+  let minPoint, maxPoint;
+  if(level===1){ minPoint=100; maxPoint=150; } else if(level===2){ minPoint=151; maxPoint=200; } else { minPoint=201; maxPoint=Infinity; }
+  const filtered = students.filter(s => { const pts=pointsMap[s.nis]||0; return pts>=minPoint && pts<=maxPoint; }).sort((a,b)=>(pointsMap[b.nis]||0)-(pointsMap[a.nis]||0));
+  if(filtered.length===0){ tbody.innerHTML='<tr><td colspan="6" class="text-center text-muted py-4">Tidak ada siswa di level ini</td></tr>'; return; }
+  let html='';
+  filtered.forEach((s,idx)=>{ const pts=pointsMap[s.nis]||0; const isHandled=handlingMap[`${s.nis}|${level}`]===true; const statusBadge=isHandled?'<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Sudah Ditangani</span>':'<span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Belum Ditangani</span>'; html+=`<tr><td>${idx+1}</td><td>${escapeHtml(s.nama)}</td><td>${escapeHtml(s.kelas)}</td><td><strong class="text-danger">${pts}</strong></td><td>${statusBadge}</td><td><button class="btn btn-sm btn-primary" onclick="openPenangananModal('${s.nis}',${level})"><i class="fas fa-hand-paper me-1"></i>Penanganan</button></td></tr>`; });
+  tbody.innerHTML=html;
+}
+window.switchPenangananTab = function(level){
+  const tabs = document.querySelectorAll('#penangananTabs .nav-link');
+  tabs.forEach(tab => tab.classList.remove('active'));
+  const activeTab = document.querySelector(`#penangananTabs .nav-link[data-level="${level}"]`);
+  if(activeTab) activeTab.classList.add('active');
+  for(let i=1;i<=3;i++){ const tabContent=document.getElementById(`penangananTab${i}`); if(tabContent){ if(i===level) tabContent.classList.remove('d-none'); else tabContent.classList.add('d-none'); } }
+  renderPenangananTable(level);
+};
+let currentHandlingPhotoData = null;
+window.openPenangananModal = function(nis, level){
+  const student = students.find(s=>s.nis===nis);
+  if(!student) return;
+  document.getElementById('penanganan_nis').value=nis;
+  document.getElementById('penanganan_level').value=level;
+  document.getElementById('penanganan_nama').innerText=student.nama;
+  document.getElementById('penanganan_total_poin').innerText=pointsMap[nis]||0;
+  document.getElementById('penanganan_date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('penanganan_notes').value='';
+  document.getElementById('checkPernyataan').checked=false;
+  if(document.getElementById('penanganan_photo')) document.getElementById('penanganan_photo').value='';
+  document.getElementById('handlingPhotoPreviewContainer').style.display='none';
+  document.getElementById('handlingPhotoEmptyState').style.display='block';
+  currentHandlingPhotoData=null;
+  const studentViolations = violations.filter(v=>v.studentNis===nis);
+  const historyDiv = document.getElementById('penangananHistoryList');
+  if(studentViolations.length===0){ historyDiv.innerHTML='<p class="text-muted mb-0">Tidak ada riwayat pelanggaran.</p>'; }
+  else{ let h='<table class="table table-sm table-bordered mb-0"><thead><tr><th>Tanggal</th><th>Jenis</th><th>Poin</th></tr></thead><tbody>'; studentViolations.forEach(v=>{ h+=`<tr><td>${formatDate(v.date)}</td><td>${escapeHtml(v.typeName)}</td><td>${v.points}</td>`; }); h+=`</tbody></table>`; historyDiv.innerHTML=h; }
+  new bootstrap.Modal(document.getElementById('penangananModal')).show();
+};
+window.previewHandlingPhoto = function(e){ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>{ currentHandlingPhotoData=ev.target.result; document.getElementById('handlingPhotoPreview').src=ev.target.result; document.getElementById('handlingPhotoPreviewContainer').style.display='block'; document.getElementById('handlingPhotoEmptyState').style.display='none'; }; reader.readAsDataURL(file); };
+window.clearHandlingPhoto = function(){ if(document.getElementById('penanganan_photo')) document.getElementById('penanganan_photo').value=''; document.getElementById('handlingPhotoPreviewContainer').style.display='none'; document.getElementById('handlingPhotoEmptyState').style.display='block'; currentHandlingPhotoData=null; };
+window.simpanDanCetakPenanganan = function(){
+  const nis = document.getElementById('penanganan_nis').value;
+  const level = parseInt(document.getElementById('penanganan_level').value);
+  const date = document.getElementById('penanganan_date').value;
+  const notes = document.getElementById('penanganan_notes').value;
+  const check = document.getElementById('checkPernyataan').checked;
+  if(!date || !notes){ showAlert('Tanggal dan keterangan wajib!','danger'); return; }
+  if(!check){ showAlert('Harus centang perjanjian siswa!','warning'); return; }
+  studentHandling.push({ id: Date.now(), nis, level, date, notes, photoData: currentHandlingPhotoData || null });
+  saveStudentHandling(); recalculateCaches();
+  cetakSuratPenanganan(nis, level, date, notes);
+  bootstrap.Modal.getInstance(document.getElementById('penangananModal')).hide();
+  renderPenangananTable(level);
+  showAlert(`Penanganan Level ${level} berhasil disimpan!`);
+};
+
+// ==================== CETAKAN PROFESIONAL (RAPAT 1 SPASI) ====================
+function cetakSuratPenanganan(nis, level, date, notes){
+  const student = students.find(s => s.nis === nis);
+  const schoolInfo = JSON.parse(localStorage.getItem('school_info') || '{"name":"SMK NEGERI 1 JAKARTA","address":"Jl. Pendidikan No. 123, Jakarta","kepala":"Drs. Ahmad Fauzi, M.Pd","waka":"Budi Santoso, S.Pd"}');
+  const totalPoints = pointsMap[nis] || 0;
+  const studentViolations = violations.filter(v => v.studentNis === nis);
+  
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const tgl = new Date(date);
+  const tanggalFormatted = `${tgl.getDate()} ${months[tgl.getMonth()]} ${tgl.getFullYear()}`;
+  
+  const levelText = level === 1 ? 'PENANGANAN TAHAP I (Peringatan & Pembinaan)' : (level === 2 ? 'PENANGANAN TAHAP II (Panggilan Orang Tua)' : 'PENANGANAN TAHAP III (Sanksi Akademik & Sidang BK)');
+  
+  const photoHtml = currentHandlingPhotoData ? `<div style="margin-top:20px;"><p style="font-weight:bold; margin-bottom:8px;">Dokumentasi Foto Bukti Penanganan:</p><img src="${currentHandlingPhotoData}" style="max-width:100%; max-height:200px; border:1px solid #ccc; padding:4px;"></div>` : '';
+  
+  // Tabel riwayat pelanggaran
+  let riwayatTable = '<table style="width:100%; border-collapse: collapse; margin-top:12px; margin-bottom:16px;">';
+  riwayatTable += '<thead><tr style="background-color:#f0f0f0;"><th style="border:1px solid #000; padding:6px; text-align:center;">No</th><th style="border:1px solid #000; padding:6px; text-align:center;">Tanggal</th><th style="border:1px solid #000; padding:6px;">Jenis Pelanggaran</th><th style="border:1px solid #000; padding:6px; text-align:center;">Poin</th></tr></thead><tbody>';
+  studentViolations.forEach((v, i) => {
+    const tglPelanggaran = new Date(v.date);
+    const tglFormat = `${tglPelanggaran.getDate()} ${months[tglPelanggaran.getMonth()]} ${tglPelanggaran.getFullYear()}`;
+    riwayatTable += `<tr><td style="border:1px solid #000; padding:6px; text-align:center;">${i+1}</td><td style="border:1px solid #000; padding:6px; text-align:center;">${tglFormat}</td><td style="border:1px solid #000; padding:6px;">${escapeHtml(v.typeName)}</td><td style="border:1px solid #000; padding:6px; text-align:center;">${v.points}</td></tr>`;
+  });
+  riwayatTable += `<tr style="background-color:#e8f4fd;"><td colspan="3" style="border:1px solid #000; padding:6px; text-align:right; font-weight:bold;">TOTAL POIN</td><td style="border:1px solid #000; padding:6px; text-align:center; font-weight:bold;">${totalPoints}</td></tr>`;
+  riwayatTable += '</tbody></table>';
+  
+  const printHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Surat Penanganan Siswa - ${student.nama}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      background: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    .kertas {
+      max-width: 21cm;
+      min-height: 29.7cm;
+      margin: 0 auto;
+      background: white;
+      padding: 1.5cm;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid #000;
+    }
+    .kop img { max-height: 70px; margin-bottom: 8px; }
+    .kop h1 { font-size: 16pt; font-weight: bold; margin: 4px 0; text-transform: uppercase; }
+    .kop h2 { font-size: 12pt; font-weight: normal; margin: 2px 0; }
+    .kop p { font-size: 10pt; margin: 2px 0; }
+    .judul { text-align: center; margin: 20px 0 16px 0; }
+    .judul h3 { font-size: 13pt; font-weight: bold; text-decoration: underline; text-transform: uppercase; }
+    .judul p { font-size: 11pt; margin-top: 4px; }
+    .nomor-surat { text-align: right; margin-bottom: 16px; font-size: 10pt; }
+    .isi { font-size: 11pt; line-height: 1.2; text-align: justify; margin-top: 12px; }
+    .isi p { margin-bottom: 8px; }
+    .tabel-info { width: 100%; margin: 12px 0; border-collapse: collapse; }
+    .tabel-info td { padding: 4px 6px; border: none; vertical-align: top; }
+    .tabel-info td:first-child { width: 32%; font-weight: bold; }
+    .pernyataan { margin: 20px 0; padding: 12px; border: 1px solid #000; background-color: #f9f9f9; }
+    .pernyataan p { margin: 6px 0; text-align: justify; font-size: 10.5pt; }
+    .pernyataan .teks-pernyataan { font-style: italic; margin-top: 8px; }
+    .ttd { margin-top: 35px; display: flex; justify-content: space-between; flex-wrap: wrap; }
+    .ttd-kiri, .ttd-kanan { width: 45%; }
+    .ttd-item { text-align: center; margin-bottom: 25px; }
+    .ttd-label { font-weight: bold; margin-bottom: 4px; font-size: 10pt; }
+    .ttd-nama { margin-top: 40px; font-weight: bold; text-decoration: underline; font-size: 11pt; }
+    .ttd-catatan { font-size: 9pt; margin-top: 4px; }
+    .clearfix { clear: both; }
+    @media print {
+      body { padding: 0; margin: 0; }
+      .kertas { box-shadow: none; padding: 1.5cm; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="kertas">
+  <!-- KOP SURAT TENGAH -->
+  <div class="kop">
+    ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" alt="Logo Sekolah">` : ''}
+    <h1>${escapeHtml(schoolInfo.name || 'SEKOLAH MENENGAH KEJURUAN')}</h1>
+    <h2>${escapeHtml(schoolInfo.address?.split(',')[1] || '')}</h2>
+    <p>${escapeHtml(schoolInfo.address || '')}</p>
+    <p>Telepon: (021) 1234567 | Email: info@sekolah.sch.id</p>
+  </div>
+
+  <!-- NOMOR SURAT -->
+  <div class="nomor-surat">
+    Nomor: 001/BK/${level}/${tgl.getFullYear()}/SMK
+  </div>
+
+  <!-- JUDUL SURAT -->
+  <div class="judul">
+    <h3>SURAT PENANGANAN SISWA</h3>
+    <p>${levelText}</p>
+  </div>
+
+  <!-- ISI SURAT -->
+  <div class="isi">
+    <p>Yang bertanda tangan di bawah ini, Kepala Sekolah ${escapeHtml(schoolInfo.name || 'SMK NEGERI 1 JAKARTA')}, bersama dengan Waka Kesiswaan dan Guru Bimbingan Konseling, telah melakukan penanganan terhadap siswa:</p>
+    
+    <table class="tabel-info">
+      <tr><td>Nama Lengkap</td><td>: ${escapeHtml(student.nama)}</td></tr>
+      <tr><td>NIS / NISN</td><td>: ${escapeHtml(student.nis)}</td></tr>
+      <tr><td>Kelas / Jurusan</td><td>: ${escapeHtml(student.kelas)}</td></tr>
+      <tr><td>Nama Orang Tua/Wali</td><td>: ${escapeHtml(student.ortu || '-')}</td></tr>
+      <tr><td>Alamat</td><td>: ${escapeHtml(schoolInfo.address || '-')}</td></tr>
+    </table>
+
+    <p>Berdasarkan data pelanggaran yang tercatat, siswa tersebut telah melakukan pelanggaran sebagai berikut:</p>
+    
+    ${riwayatTable}
+
+    <p>Setelah melalui proses pembinaan dan penanganan pada tanggal <strong>${tanggalFormatted}</strong>, berikut adalah tindakan yang telah diberikan:</p>
+    
+    <div style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-left: 4px solid #0d6efd;">
+      <p style="margin: 0;"><strong>Tindakan Penanganan:</strong><br>${escapeHtml(notes)}</p>
+    </div>
+  </div>
+
+  <!-- SURAT PERNYATAAN -->
+  <div class="pernyataan">
+    <p style="text-align: center; font-weight: bold;">SURAT PERNYATAAN</p>
+    <p>Saya yang bertanda tangan di bawah ini menyatakan dengan sesungguhnya bahwa:</p>
+    <p class="teks-pernyataan">"Saya <strong>${escapeHtml(student.nama)}</strong> berjanji tidak akan mengulangi perbuatan yang melanggar tata tertib sekolah. Apabila saya mengulangi pelanggaran, saya siap menerima sanksi yang lebih berat sesuai dengan peraturan yang berlaku."</p>
+    <p>Demikian surat pernyataan ini saya buat dengan kesadaran penuh tanpa paksaan dari pihak manapun.</p>
+  </div>
+
+  ${photoHtml}
+
+  <!-- TANDA TANGAN SEJAJAR -->
+  <div class="ttd">
+    <div class="ttd-kiri">
+      <div class="ttd-item">
+        <div class="ttd-label">Mengetahui,</div>
+        <div class="ttd-label">Orang Tua/Wali Murid</div>
+        <div class="ttd-nama">${escapeHtml(student.ortu || '(_________________)')}</div>
+        <div class="ttd-catatan">Nama Jelas Orang Tua/Wali</div>
+      </div>
+      <div class="ttd-item">
+        <div class="ttd-label">Hormat Kami,</div>
+        <div class="ttd-label">Siswa Yang Bersangkutan</div>
+        <div class="ttd-nama">${escapeHtml(student.nama)}</div>
+        <div class="ttd-catatan">NIS. ${escapeHtml(student.nis)}</div>
+      </div>
+    </div>
+    <div class="ttd-kanan">
+      <div class="ttd-item">
+        <div class="ttd-label">Mengetahui,</div>
+        <div class="ttd-label">Kepala Sekolah</div>
+        <div class="ttd-nama">${escapeHtml(schoolInfo.kepala || '(_________________)')}</div>
+        <div class="ttd-catatan">NIP. __________________</div>
+      </div>
+      <div class="ttd-item">
+        <div class="ttd-label">Mengetahui,</div>
+        <div class="ttd-label">Waka Kesiswaan</div>
+        <div class="ttd-nama">${escapeHtml(schoolInfo.waka || '(_________________)')}</div>
+        <div class="ttd-catatan">NIP. __________________</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="clearfix"></div>
+</div>
 
 <script>
-// =============================================================================
-// 1. GLOBAL VARIABLES
-// =============================================================================
-let students = [];
-let violationTypes = [ 
-    {id:1,name:'Terlambat',points:5}, 
-    {id:2,name:'Tidak Pakai Seragam',points:10}, 
-    {id:3,name:'Bolos',points:20}, 
-    {id:4,name:'Bullying',points:50},
-    {id:5,name:'Berkelahi',points:50}
-];
-let violations = []; 
-let studentHandling = []; 
-
-// Cache variables for performance
-let pointsMap = {}; // Map: NIS -> Total Points
-let handlingMap = {}; // Map: NIS -> Last Date
-
-// Variabel untuk foto penanganan
-let currentHandlingPhoto = null;
-let currentHandlingPhotoData = null;
-
-// Chart instance
-let trendChartInstance = null;
-
-// =============================================================================
-// 2. UTILITY FUNCTIONS
-// =============================================================================
-function showAlert(m, t='success', to=3500) { 
-    const a = document.getElementById('alertArea'); 
-    const d = document.createElement('div'); 
-    d.className = `alert alert-${t} alert-dismissible fade show`; 
-    d.innerHTML = `${m}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`; 
-    a.appendChild(d); 
-    setTimeout(() => d.remove(), to); 
+  window.onload = function() {
+    window.print();
+    setTimeout(function() { window.close(); }, 500);
+  };
+<\/script>
+</body>
+</html>`;
+  
+  const win = window.open('', '_blank');
+  win.document.write(printHtml);
+  win.document.close();
 }
 
-function escapeHtml(s) { 
-    if (!s) return '';
-    return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); 
+// ==================== PENGATURAN ====================
+function renderViolationTypesTable(){
+  const tbody = document.getElementById('violationTypesTableBody');
+  if(!tbody) return;
+  let html='';
+  violationTypes.forEach((type,idx)=>{ html+=`<tr><td>${idx+1}</td><td>${escapeHtml(type.name)}</td><td>${type.points}</td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteViolationType(${type.id})">Hapus</button></td>`; });
+  tbody.innerHTML=html;
 }
-
-function formatDate(ds) { 
-    if(!ds) return '-'; 
-    try {
-        return new Date(ds).toLocaleDateString('id-ID'); 
-    } catch(e) {
-        return ds;
-    }
+function addViolationType(){
+  const name = document.getElementById('newViolationTypeName').value.trim();
+  const points = parseInt(document.getElementById('newViolationTypePoints').value);
+  if(!name){ showAlert('Nama pelanggaran harus diisi!','danger'); return; }
+  if(!points || points<1){ showAlert('Point harus positif!','danger'); return; }
+  const newId = violationTypes.length>0 ? Math.max(...violationTypes.map(t=>t.id))+1 : 1;
+  violationTypes.push({id:newId,name:name,points:points});
+  saveViolationTypes(); renderViolationTypesTable(); populateViolationTypes();
+  document.getElementById('newViolationTypeName').value=''; document.getElementById('newViolationTypePoints').value='';
+  showAlert('Jenis pelanggaran ditambahkan!');
 }
-
-function formatDateYear(ds) {
-    if(!ds) return '-';
-    try {
-        return new Date(ds).getFullYear();
-    } catch(e) {
-        return '-';
-    }
+function deleteViolationType(id){
+  const isUsed = violations.some(v=>v.typeId===id);
+  if(isUsed){ showAlert('Tidak bisa hapus, masih digunakan!','danger'); return; }
+  if(confirm('Hapus jenis pelanggaran ini?')){ violationTypes=violationTypes.filter(t=>t.id!==id); saveViolationTypes(); renderViolationTypesTable(); populateViolationTypes(); showAlert('Dihapus!'); }
 }
+function exportJSON(){ const blob=new Blob([JSON.stringify({students,violations,studentHandling,violationTypes},null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup.json'; a.click(); }
+function handleImportJSON(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=function(ev){ try{ const d=JSON.parse(ev.target.result); if(d.students){ students=d.students; saveStudents(); } if(d.violations){ violations=d.violations; saveViolations(); } if(d.studentHandling){ studentHandling=d.studentHandling; saveStudentHandling(); } if(d.violationTypes){ violationTypes=d.violationTypes; saveViolationTypes(); renderViolationTypesTable(); populateViolationTypes(); } recalculateCaches(); renderStudentsTable(); renderViolationsTable(); showAlert('Restore berhasil!'); } catch(err){ showAlert('File error','danger'); } }; r.readAsText(f); }
+function resetAll(){ if(confirm('HAPUS SEMUA DATA? Tidak bisa dibatalkan!')){ localStorage.clear(); location.reload(); } }
 
-// Debounce function
-function debounce(func, wait) {
-    let timeout;
-    return function(...args) {
-        const context = this;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(context, args), wait);
-    };
+// ==================== NAVIGASI ====================
+window.showPage = function(page){
+  document.querySelectorAll('.page').forEach(p => p.classList.add('d-none'));
+  const target = document.getElementById(`page_${page}`);
+  if(target) target.classList.remove('d-none');
+  const titles = { identitas:'Identitas Sekolah', data_siswa:'Data Siswa', pelanggaran:'Pencatatan Pelanggaran', rekap:'Rekap Pelanggaran', penanganan:'Penanganan 3 Level', pengaturan:'Pengaturan' };
+  document.getElementById('pageTitle').innerText = titles[page] || 'Dashboard';
+  if(page === 'data_siswa') renderStudentsTable();
+  if(page === 'pelanggaran'){ populateViolationTypes(); renderViolationsTable(); document.getElementById('viDate').value = new Date().toISOString().split('T')[0]; }
+  if(page === 'penanganan'){ if(!document.querySelector('#penangananTabs .nav-link.active')) switchPenangananTab(1); else { const activeLevel = document.querySelector('#penangananTabs .nav-link.active')?.getAttribute('data-level') || 1; renderPenangananTable(parseInt(activeLevel)); } }
+  if(page === 'pengaturan') renderViolationTypesTable();
+  if(window.innerWidth < 992) document.getElementById('sidebar').classList.add('collapsed');
+};
+
+// ==================== INIT ====================
+function loadData(){
+  const s = localStorage.getItem('students'); if(s) students = JSON.parse(s); else students = [{nis:'001',nama:'Ahmad Saputra',kelas:'XI RPL',ortu:'Bapak Ahmad'},{nis:'002',nama:'Budi Santoso',kelas:'XII TKJ',ortu:'Bapak Budi'}];
+  const v = localStorage.getItem('violations'); if(v) violations = JSON.parse(v); else violations = [];
+  const vt = localStorage.getItem('violation_types'); if(vt) violationTypes = JSON.parse(vt);
+  const sh = localStorage.getItem('student_handling'); if(sh) studentHandling = JSON.parse(sh);
+  recalculateCaches();
+  saveStudents(); saveViolations(); saveViolationTypes(); saveStudentHandling();
 }
-
-// =============================================================================
-// 3. CORE MANAGEMENT
-// =============================================================================
-
-// Recalculate caches
-function recalculateCaches() {
-    console.log("Recalculating caches...");
-    pointsMap = {};
-    violations.forEach(v => {
-        if (v && v.studentNis) {
-            pointsMap[v.studentNis] = (pointsMap[v.studentNis] || 0) + (v.points || 0);
-        }
-    });
-
-    handlingMap = {};
-    studentHandling.forEach(h => {
-        if (h && h.nis && h.date) {
-            if(!handlingMap[h.nis] || new Date(h.date) > new Date(handlingMap[h.nis])) {
-                handlingMap[h.nis] = h.date;
-            }
-        }
-    });
-}
-
-// =============================================================================
-// 4. SCHOOL INFO
-// =============================================================================
-function loadSchoolInfo() {
-    const i = JSON.parse(localStorage.getItem('school_info') || '{}');
-    document.getElementById('si_input_name').value = i.name || 'SMK Negeri 1';
-    document.getElementById('si_input_address').value = i.address || 'Jl. Pendidikan No. 1';
-    document.getElementById('si_input_kepala').value = i.kepala || 'Drs. Kepala Sekolah, M.Pd';
-    document.getElementById('si_input_waka').value = i.waka || 'Drs. Waka Kesiswaan, M.Pd';
-    document.getElementById('si_logo_preview').src = i.logo || '';
-    document.getElementById('schoolLogoSmall').src = i.logo || '';
-    document.getElementById('si_name').textContent = i.name || 'SMK Negeri 1';
-    document.getElementById('si_address').textContent = i.address || 'Jl. Pendidikan No. 1';
-}
-
-function saveSchoolInfo() {
-    localStorage.setItem('school_info', JSON.stringify({
-        name: document.getElementById('si_input_name').value,
-        address: document.getElementById('si_input_address').value,
-        kepala: document.getElementById('si_input_kepala').value,
-        waka: document.getElementById('si_input_waka').value,
-        logo: document.getElementById('si_logo_preview').src
-    }));
-    loadSchoolInfo(); 
-    showAlert('Data sekolah berhasil disimpan!');
-}
-
-function previewLogo(e) { 
-    const f = e.target.files[0]; 
-    if(!f) return; 
-    const r = new FileReader(); 
-    r.onload = (ev) => { 
-        document.getElementById('si_logo_preview').src = ev.target.result; 
-    }; 
-    r.readAsDataURL(f); 
-}
-
-// =============================================================================
-// 5. STUDENT MANAGEMENT
-// =============================================================================
-function loadStudents() { 
-    const d = localStorage.getItem('students'); 
-    if(d) {
-        try { students = JSON.parse(d); } catch(e) { students = []; }
-    } else { 
-        students = [
-  { nis: '0094789075', nama: 'ADI SAPUTRA', kelas: 'X (Sepuluh)', ortu: 'Slamet Wahyudi', photo: 'https://picsum.photos/seed/0094789075/40/40.jpg' },
-{ nis: '0096019190', nama: 'AULIA NUR LAELA', kelas: 'X (Sepuluh)', ortu: 'Narjo', photo: 'https://picsum.photos/seed/0096019190/40/40.jpg' },
-{ nis: '0107301719', nama: 'CIPA NADIA SALMA', kelas: 'X (Sepuluh)', ortu: 'Samsuri', photo: 'https://picsum.photos/seed/0107301719/40/40.jpg' },
-{ nis: '0088133836', nama: 'DEDI IRAWAN', kelas: 'X (Sepuluh)', ortu: 'Dwi junianto', photo: 'https://picsum.photos/seed/0088133836/40/40.jpg' },
-{ nis: '0097790486', nama: 'FAREL SAPUTERA', kelas: 'X (Sepuluh)', ortu: 'Wasidi', photo: 'https://picsum.photos/seed/0097790486/40/40.jpg' },
-{ nis: '0106097706', nama: 'ISMAWATI DWI ANGGRAINI', kelas: 'X (Sepuluh)', ortu: 'Taukhit', photo: 'https://picsum.photos/seed/0106097706/40/40.jpg' },
-{ nis: '0085852231', nama: 'IRFAN', kelas: 'X (Sepuluh)', ortu: 'SUKRI', photo: 'https://picsum.photos/seed/0085852231/40/40.jpg' },
-{ nis: '0092200897', nama: 'LUTHFI HAKIM', kelas: 'X (Sepuluh)', ortu: 'SUPARMAN', photo: 'https://picsum.photos/seed/0092200897/40/40.jpg' },
-{ nis: '0109081925', nama: 'M.ADITYA PRAYOGA', kelas: 'X (Sepuluh)', ortu: 'M.Marzuki', photo: 'https://picsum.photos/seed/0109081925/40/40.jpg' },
-{ nis: '0094433103', nama: 'M.AL IMRON', kelas: 'X (Sepuluh)', ortu: 'Imam Subari', photo: 'https://picsum.photos/seed/0094433103/40/40.jpg' },
-{ nis: '0097848607', nama: 'MOHAMAT HARIS SETIAWAN', kelas: 'X (Sepuluh)', ortu: 'TRIYONO', photo: 'https://picsum.photos/seed/0097848607/40/40.jpg' },
-{ nis: '0082735425', nama: 'MOHAMAD RIKI SAPUTRA', kelas: 'X (Sepuluh)', ortu: 'PONIDI', photo: 'https://picsum.photos/seed/0082735425/40/40.jpg' },
-{ nis: '0102522253', nama: 'RADITYA DANU PRATAMA', kelas: 'X (Sepuluh)', ortu: 'Gatot Suherman', photo: 'https://picsum.photos/seed/0102522253/40/40.jpg' },
-{ nis: '0102235604', nama: 'RIDHO FIRMANSYAH', kelas: 'X (Sepuluh)', ortu: 'SUNTORO', photo: 'https://picsum.photos/seed/0102235604/40/40.jpg' },
-{ nis: '0099798429', nama: 'RIZKI CAHYO SUGENG WIBOWO', kelas: 'X (Sepuluh)', ortu: 'MISIYO', photo: 'https://picsum.photos/seed/0099798429/40/40.jpg' },
-{ nis: '0000000316', nama: 'RIZAL ABDUL HAQ', kelas: 'X (Sepuluh)', ortu: 'Suhirno', photo: 'https://picsum.photos/seed/0000000000/40/40.jpg' },
-{ nis: '0106667835', nama: 'SAFA AULIA PUTRI', kelas: 'X (Sepuluh)', ortu: 'Jumidi', photo: 'https://picsum.photos/seed/0106667835/40/40.jpg' },
-{ nis: '0105199297', nama: 'SHINTA SASTYA WATI', kelas: 'X (Sepuluh)', ortu: 'Ah.Suyani', photo: 'https://picsum.photos/seed/0105199297/40/40.jpg' },
-{ nis: '3106050813', nama: 'TIYAS FARIDA SARI', kelas: 'X (Sepuluh)', ortu: 'Ah. Mutaqin', photo: 'https://picsum.photos/seed/3106050813/40/40.jpg' },
-{ nis: '0095977397', nama: 'FAIS DAROIN', kelas: 'X (Sepuluh)', ortu: '', photo: 'https://picsum.photos/seed/0095977397/40/40.jpg' },
-{ nis: '0095046784', nama: 'YULIA MUSLIMATUS SADIYAH', kelas: 'X (Sepuluh)', ortu: '', photo: 'https://picsum.photos/seed/0095046784/40/40.jpg' },
-
-{ nis: '0084903816', nama: 'Ahmad Iqbal', kelas: 'XI (Sebelas)', ortu: 'Paimin', photo: 'https://picsum.photos/seed/0084903816/40/40.jpg' },
-{ nis: '0088606301', nama: 'Ahmad Ramadhani', kelas: 'XI (Sebelas)', ortu: 'Slamet Wahyudi', photo: 'https://picsum.photos/seed/0088606301/40/40.jpg' },
-{ nis: '1000000001', nama: 'Argi Setiawan', kelas: 'XI (Sebelas)', ortu: 'Sukirno', photo: 'https://picsum.photos/seed/ArgiSetiawan/40/40.jpg' },
-{ nis: '0081098360', nama: 'Aisyah Lu\'lu\'ul Husna', kelas: 'XI (Sebelas)', ortu: 'Maryono', photo: 'https://picsum.photos/seed/0081098360/40/40.jpg' },
-{ nis: '0095627591', nama: 'Anggun Puspita Anggraini', kelas: 'XI (Sebelas)', ortu: 'Sariyono', photo: 'https://picsum.photos/seed/0095627591/40/40.jpg' },
-{ nis: '0089314202', nama: 'Dafa', kelas: 'XI (Sebelas)', ortu: 'Sudarmaji', photo: 'https://picsum.photos/seed/0089314202/40/40.jpg' },
-{ nis: '0091007309', nama: 'Devita Anjani', kelas: 'XI (Sebelas)', ortu: 'Budi Wahyono', photo: 'https://picsum.photos/seed/0091007309/40/40.jpg' },
-{ nis: '2000000002', nama: 'Ferdi Kurniawan', kelas: 'XI (Sebelas)', ortu: 'Mukani', photo: 'https://picsum.photos/seed/FerdiKurniawan/40/40.jpg' },
-{ nis: '3000000003', nama: 'Fitra Afriza', kelas: 'XI (Sebelas)', ortu: 'Wasito', photo: 'https://picsum.photos/seed/FitraAfriza/40/40.jpg' },
-{ nis: '0084423897', nama: 'Indah Kasturi Kusuma Putri', kelas: 'XI (Sebelas)', ortu: 'Ahmad Sabidin', photo: 'https://picsum.photos/seed/0084423897/40/40.jpg' },
-{ nis: '0098669866', nama: 'Lefiyana Juwita', kelas: 'XI (Sebelas)', ortu: 'Ponirin', photo: 'https://picsum.photos/seed/0098669866/40/40.jpg' },
-{ nis: '0085606025', nama: 'Marchfel Firdiyansah', kelas: 'XI (Sebelas)', ortu: 'Supriyadi', photo: 'https://picsum.photos/seed/0085606025/40/40.jpg' },
-{ nis: '0089725108', nama: 'Melinda Kusuma Dewi', kelas: 'XI (Sebelas)', ortu: 'Zaenuddin', photo: 'https://picsum.photos/seed/0089725108/40/40.jpg' },
-{ nis: '0092585298', nama: 'M.Yudha Rizki Iftori', kelas: 'XI (Sebelas)', ortu: 'Candra Gunawan', photo: 'https://picsum.photos/seed/0092585298/40/40.jpg' },
-{ nis: '0074048074', nama: 'Mohamad Ibnu Rosid', kelas: 'XI (Sebelas)', ortu: 'Parman', photo: 'https://picsum.photos/seed/0074048074/40/40.jpg'},
-{ nis: '0083168310', nama: 'M.Bisma Mega Nanda', kelas: 'XI (Sebelas)', ortu: 'Suratman', photo: 'https://picsum.photos/seed/0083168310/40/40.jpg' },
-{ nis: '0095212808', nama: 'M.Rizki Ramadhani', kelas: 'XI (Sebelas)', ortu: 'Syamsuri', photo: 'https://picsum.photos/seed/0095212808/40/40.jpg' },
-{ nis: '0000000004', nama: 'M.Fiki Darmawan', kelas: 'XI (Sebelas)', ortu: 'Basar', photo: 'https://picsum.photos/seed/MFikiDarmawan/40/40.jpg' },
-{ nis: '3095650322', nama: 'M.Badru Muwafaq', kelas: 'XI (Sebelas)', ortu: 'M.Idris', photo: 'https://picsum.photos/seed/3095650322/40/40.jpg' },
-{ nis: '0095475420', nama: 'Rima', kelas: 'XI (Sebelas)', ortu: 'Basuki', photo: 'https://picsum.photos/seed/0095475420/40/40.jpg' },
-{ nis: '0095395423', nama: 'Rima Ulvania', kelas: 'XI (Sebelas)', ortu: 'Ahmad Darmadi', photo: 'https://picsum.photos/seed/0095395423/40/40.jpg' },
-{ nis: '0091673355', nama: 'Riski Munandar', kelas: 'XI (Sebelas)', ortu: 'Sehono', photo: 'https://picsum.photos/seed/0091673355/40/40.jpg' },
-{ nis: '0064036686', nama: 'Siti Miftakhul Makmuroh', kelas: 'XI (Sebelas)', ortu: 'Nur Ngali', photo: 'https://picsum.photos/seed/0064036686/40/40.jpg' },
-{ nis: '0091403540', nama: 'Tomi Jadmiko', kelas: 'XI (Sebelas)', ortu: 'Tentrem Sutejo', photo: 'https://picsum.photos/seed/0091403540/40/40.jpg' },
-{ nis: '0086855084', nama: 'Tia Dwi Saputri', kelas: 'XI (Sebelas)', ortu: 'Sudarno', photo: 'https://picsum.photos/seed/0086855084/40/40.jpg' },
-{ nis: '0000000005', nama: 'Wafiq Khariri', kelas: 'XI (Sebelas)', ortu: 'M.Sholikin', photo: 'https://picsum.photos/seed/WafiqKhariri/40/40.jpg' },
-{ nis: '0095475420', nama: 'Yeni Winarni', kelas: 'XI (Sebelas)', ortu: 'Hermawan', photo: 'https://picsum.photos/seed/0095475420/40/40.jpg' },
-{ nis: '0000000006', nama: 'Ainun Nadhiroh', kelas: 'XI (Sebelas)', ortu: 'Ahmad Sukirno', photo: 'https://picsum.photos/seed/AinunNadhiroh/40/40.jpg' },
-{ nis: '0098781514', nama: 'Habibatus Zakia', kelas: 'XI (Sebelas)', ortu: 'Mastur Supriyanto', photo: 'https://picsum.photos/seed/0098781514/40/40.jpg' },
-{ nis: '3096763981', nama: 'Dwi Fatimah', kelas: 'XI (Sebelas)', ortu: 'Sugiarto', photo: 'https://picsum.photos/seed/3096763981/40/40.jpg' },
-{ nis: '3085136071', nama: 'M.Akbar Panjalu', kelas: 'XI (Sebelas)', ortu: 'Imam Mashuri', photo: 'https://picsum.photos/seed/3085136071/40/40.jpg' },
-{ nis: '0000000007', nama: 'Angga Dwi Saputra', kelas: 'XI (Sebelas)', ortu: 'Muhlasin', photo: 'https://picsum.photos/seed/AnggaDwiSaputra/40/40.jpg' },
-
-{ nis: '0077667204', nama: 'Ahmad Maulana', kelas: 'XII (dua Belas)', ortu: 'Wagiman', photo: 'https://picsum.photos/seed/0077667204/40/40.jpg' },
-{ nis: '0085214724', nama: 'Aliya Ayu Marlina', kelas: 'XII (dua Belas)', ortu: 'Kasiman', photo: 'https://picsum.photos/seed/0085214724/40/40.jpg' },
-{ nis: '0087149069', nama: 'Aprilia Winanti', kelas: 'XII (dua Belas)', ortu: 'Winarno', photo: 'https://picsum.photos/seed/0087149069/40/40.jpg' },
-{ nis: '0082699089', nama: 'Bagas Setiawan', kelas: 'XII (dua Belas)', ortu: 'Supriyatin', photo: 'https://picsum.photos/seed/0082699089/40/40.jpg' },
-{ nis: '0068818482', nama: 'Bagus Akbar Rani', kelas: 'XII (dua Belas)', ortu: 'Surani', photo: 'https://picsum.photos/seed/0068818482/40/40.jpg' },
-{ nis: '0088041522', nama: 'Binti Lutfiyah Zakiyah', kelas: 'XII (dua Belas)', ortu: 'Suratmin', photo: 'https://picsum.photos/seed/0088041522/40/40.jpg' },
-{ nis: '0087100213', nama: 'Cantika Dwi Jayanti', kelas: 'XII (dua Belas)', ortu: 'Pramono Ahmad Zaini', photo: 'https://picsum.photos/seed/0087100213/40/40.jpg' },
-{ nis: '0073724648', nama: 'Dennis Prasetiyo', kelas: 'XII (dua Belas)', ortu: 'Mustaji Untoro', photo: 'https://picsum.photos/seed/0073724648/40/40.jpg' },
-{ nis: '0073965350', nama: 'Disky Ramadani', kelas: 'XII (dua Belas)', ortu: 'M.Zahidin', photo: 'https://picsum.photos/seed/0073965350/40/40.jpg' },
-{ nis: '0072676706', nama: 'Ega Saputra', kelas: 'XII (dua Belas)', ortu: 'Sugiyono', photo: 'https://picsum.photos/seed/0072676706/40/40.jpg' },
-{ nis: '0085103057', nama: 'Eka Putri Febriani', kelas: 'XII (dua Belas)', ortu: 'Jamroji', photo: 'https://picsum.photos/seed/0085103057/40/40.jpg' },
-{ nis: '0083708627', nama: 'Endra Saputra', kelas: 'XII (dua Belas)', ortu: 'Darwanto', photo: 'https://picsum.photos/seed/0083708627/40/40.jpg' },
-{ nis: '0081159769', nama: 'Farid Ahmad Faisal', kelas: 'XII (dua Belas)', ortu: 'Sutarmin', photo: 'https://picsum.photos/seed/0081159769/40/40.jpg' },
-{ nis: '0084757704', nama: 'Maulana Dava', kelas: 'XII (dua Belas)', ortu: 'Muh Makruf', photo: 'https://picsum.photos/seed/0084757704/40/40.jpg' },
-{ nis: '0000000008', nama: 'Maya Safitri', kelas: 'XII (dua Belas)', ortu: 'Paiman', photo: 'https://picsum.photos/seed/MayaSafitri/40/40.jpg' },
-{ nis: '0077167251', nama: 'Miranti', kelas: 'XII (dua Belas)', ortu: 'Sunardi', photo: 'https://picsum.photos/seed/0077167251/40/40.jpg' },
-{ nis: '0072775329', nama: 'Muhammad Aldino Ama Rasya', kelas: 'XII (dua Belas)', ortu: 'Tarmidi', photo: 'https://picsum.photos/seed/0072775329/40/40.jpg' },
-{ nis: '0082727230', nama: 'Muhammad Ahya', kelas: 'XII (dua Belas)', ortu: 'Nurwadi', photo: 'https://picsum.photos/seed/0082727230/40/40.jpg' },
-{ nis: '0081846871', nama: 'Mohamad Dendi Firmanto', kelas: 'XII (dua Belas)', ortu: 'Sumarni', photo: 'https://picsum.photos/seed/0081846871/40/40.jpg' },
-{ nis: '0084244287', nama: 'Muhamad Misbahul Munir', kelas: 'XII (dua Belas)', ortu: 'M.Darmo', photo: 'https://picsum.photos/seed/0084244287/40/40.jpg' },
-{ nis: '0089726548', nama: 'Muhammad Rejaki', kelas: 'XII (dua Belas)', ortu: 'Ahmad Ribud', photo: 'https://picsum.photos/seed/0089726548/40/40.jpg' },
-{ nis: '0077347477', nama: 'Mohammad Sulton Al-azhar', kelas: 'XII (dua Belas)', ortu: 'Sayudi', photo: 'https://picsum.photos/seed/0077347477/40/40.jpg' },
-{ nis: '0085214724', nama: 'Nanda Ayu Ningsih', kelas: 'XII (dua Belas)', ortu: 'Kusnan', photo: 'https://picsum.photos/seed/0085214724/40/40.jpg' },
-{ nis: '0000000012', nama: 'Nayla Amin', kelas: 'XII (dua Belas)', ortu: 'Sumarni', photo: 'https://picsum.photos/seed/NaylaAmin/40/40.jpg' },
-{ nis: '0071174694', nama: 'Rahma Wulandari', kelas: 'XII (dua Belas)', ortu: 'Maryono', photo: 'https://picsum.photos/seed/0071174694/40/40.jpg' },
-{ nis: '0084479963', nama: 'Rendi Hidayat', kelas: 'XII (dua Belas)', ortu: 'Yarkoni', photo: 'https://picsum.photos/seed/0084479963/40/40.jpg' },
-{ nis: '0088343077', nama: 'Sahal Wahyudin', kelas: 'XII (dua Belas)', ortu: 'Suhadak', photo: 'https://picsum.photos/seed/0088343077/40/40.jpg' },
-{ nis: '0000000009', nama: 'Shera Aurelia Sariana', kelas: 'XII (dua Belas)', ortu: 'Muhamat Nurkholiq', photo: 'https://picsum.photos/seed/SheraAurelia/40/40.jpg' },
-{ nis: '0070226573', nama: 'Sulamanul Jamal', kelas: 'XII (dua Belas)', ortu: 'Untung Chasbulloh', photo: 'https://picsum.photos/seed/0070226573/40/40.jpg' },
-{ nis: '0075282696', nama: 'Tiara Saputri', kelas: 'XII (dua Belas)', ortu: 'Samukri', photo: 'https://picsum.photos/seed/0075282696/40/40.jpg' },
-{ nis: '0084034253', nama: 'Wahyuni Naila Ngilma', kelas: 'XII (dua Belas)', ortu: 'Sarengat', photo: 'https://picsum.photos/seed/0084034253/40/40.jpg' },
-{ nis: '0087602782', nama: 'Laura Meliyana Dewi', kelas: 'XII (dua Belas)', ortu: 'Muhamat Asngadi', photo: 'https://picsum.photos/seed/0087602782/40/40.jpg' },
-{ nis: '0000000010', nama: 'EKO NUZULUL MISBAH', kelas: 'XII (dua Belas)', ortu: '', photo: 'https://picsum.photos/seed/EkoNuzulul/40/40.jpg' },
-{ nis: '0000000011', nama: 'MUHAMAD KHOIRUR ROZIKIN', kelas: 'XII (dua Belas)', ortu: '', photo: 'https://picsum.photos/seed/MuhamadKhoirurRozikin/40/40.jpg' },
-        ]; 
-        saveStudents(); 
-    }
-}
-
-function saveStudents() { 
-    localStorage.setItem('students', JSON.stringify(students)); 
-}
-
-function renderStudentsTable() { 
-    const tbody = document.querySelector('#studentsTable tbody');
-    if (!tbody) return;
-    
-    const term = document.getElementById('searchStudent')?.value?.toLowerCase() || '';
-    const html = [];
-    
-    students.filter(s => {
-        if (!s) return false;
-        const namaMatch = s.nama ? s.nama.toLowerCase().includes(term) : false;
-        const nisMatch = s.nis ? s.nis.includes(term) : false;
-        return namaMatch || nisMatch;
-    }).forEach(s => {
-        const pts = pointsMap[s.nis] || 0; 
-        
-        html.push(`<tr>
-            <td>${escapeHtml(s.nis || '')}</td>
-            <td>${escapeHtml(s.nama || '')}</td>
-            <td>${escapeHtml(s.kelas || '')}</td>
-            <td><span class="badge bg-${pts > 200 ? 'danger' : pts > 20 ? 'warning' : 'success'}">${pts}</span></td>
-            <td>
-                <button class="btn btn-sm btn-outline-primary me-1" onclick="editStudent('${s.nis}')">Edit</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent('${s.nis}')">Hapus</button>
-            </td>
-        </tr>`);
-    });
-    
-    if (html.length === 0) {
-        html.push(`<tr><td colspan="5" class="text-center text-muted py-3">Tidak ada data siswa</td></tr>`);
-    }
-    
-    tbody.innerHTML = html.join('');
-}
-
-function openAddStudent() { 
-    document.getElementById('s_original_nis').value = '';
-    document.getElementById('s_nis').value = '';
-    document.getElementById('s_nama').value = '';
-    document.getElementById('s_kelas').value = '';
-    document.getElementById('s_ortu').value = '';
-    new bootstrap.Modal(document.getElementById('studentModal')).show(); 
-}
-
-function editStudent(nis) {
-    const s = students.find(x => x.nis === nis);
-    if(!s) return;
-    document.getElementById('s_original_nis').value = s.nis;
-    document.getElementById('s_nis').value = s.nis;
-    document.getElementById('s_nama').value = s.nama || '';
-    document.getElementById('s_kelas').value = s.kelas || '';
-    document.getElementById('s_ortu').value = s.ortu || '';
-    new bootstrap.Modal(document.getElementById('studentModal')).show();
-}
-
-function saveStudent() {
-    const onis = document.getElementById('s_original_nis').value;
-    const nis = document.getElementById('s_nis').value.trim();
-    const nama = document.getElementById('s_nama').value.trim();
-    const kelas = document.getElementById('s_kelas').value.trim();
-    const ortu = document.getElementById('s_ortu').value.trim();
-
-    if(!nis || !nama) { 
-        showAlert('NIS dan Nama wajib diisi!', 'danger'); 
-        return; 
-    }
-
-    if(onis) {
-        const idx = students.findIndex(x => x.nis === onis);
-        if(idx !== -1) students[idx] = {nis, nama, kelas, ortu};
-    } else {
-        if(students.find(x => x.nis === nis)) { 
-            showAlert('NIS sudah terdaftar!', 'danger'); 
-            return; 
-        }
-        students.push({nis, nama, kelas, ortu});
-    }
-    saveStudents(); 
-    renderStudentsTable();
-    bootstrap.Modal.getInstance(document.getElementById('studentModal')).hide();
-    showAlert('Data siswa berhasil disimpan!');
-}
-
-function deleteStudent(nis) { 
-    if(confirm('Yakin ingin menghapus data siswa ini?')) { 
-        students = students.filter(s => s.nis !== nis); 
-        violations = violations.filter(v => v.studentNis !== nis); 
-        saveStudents(); 
-        saveViolations(); 
-        recalculateCaches(); 
-        renderStudentsTable(); 
-        showAlert('Data siswa berhasil dihapus!');
-    }
-}
-
-// =============================================================================
-// 6. VIOLATION MANAGEMENT
-// =============================================================================
-function loadViolations() { 
-    const d = localStorage.getItem('violations'); 
-    if(d) {
-        try { violations = JSON.parse(d); } catch(e) { violations = []; }
-    }
-}
-
-function saveViolations() { 
-    localStorage.setItem('violations', JSON.stringify(violations)); 
-}
-
-// Violation Types
-function loadViolationTypes() { 
-    const d = localStorage.getItem('violation_types'); 
-    if(d) {
-        try { violationTypes = JSON.parse(d); } catch(e) { violationTypes = []; }
-    }
-    if (!violationTypes || violationTypes.length === 0) {
-        violationTypes = [
-            {id:1, name:'Terlambat', points:5}, 
-            {id:2, name:'Tidak Pakai Seragam', points:10}, 
-            {id:3, name:'Bolos', points:20}, 
-            {id:4, name:'Bullying', points:50},
-            {id:5, name:'Berkelahi', points:50}
-        ];
-        saveViolationTypes();
-    }
-}
-
-function saveViolationTypes() { 
-    localStorage.setItem('violation_types', JSON.stringify(violationTypes)); 
-}
-
-function populateViolationTypes() {
-    const sel = document.getElementById('viType');
-    if (!sel) return;
-    
-    sel.innerHTML = violationTypes.map(t => `<option value="${t.id}">${escapeHtml(t.name)} (${t.points}p)</option>`).join('');
-    
-    if(violationTypes.length) {
-        document.getElementById('viPoints').value = violationTypes[0].points;
-        sel.onchange = function() { 
-            const t = violationTypes.find(x => x.id == this.value); 
-            document.getElementById('viPoints').value = t ? t.points : ''; 
-        };
-    }
-}
-
-function renderViolationTypesTable() {
-    const tbody = document.getElementById('violationTypesTableBody');
-    if(!tbody) return;
-    
-    let html = '';
-    violationTypes.forEach((type, index) => {
-        html += `<tr>
-            <td>${index + 1}</td>
-            <td>${escapeHtml(type.name || '')}</td>
-            <td>${type.points || 0}</td>
-            <td>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteViolationType(${type.id})">
-                    <i class="fas fa-trash"></i> Hapus
-                </button>
-            </td>
-        </tr>`;
-    });
-    
-    if (html.length === 0) {
-        html = `<tr><td colspan="4" class="text-center text-muted py-3">Belum ada jenis pelanggaran</td></tr>`;
-    }
-    
-    tbody.innerHTML = html;
-}
-
-function addViolationType() {
-    const nameInput = document.getElementById('newViolationTypeName');
-    const pointsInput = document.getElementById('newViolationTypePoints');
-    
-    const name = nameInput.value.trim();
-    const points = parseInt(pointsInput.value);
-    
-    if(!name) {
-        showAlert('Nama pelanggaran harus diisi!', 'danger');
-        return;
-    }
-    
-    if(!points || points < 1) {
-        showAlert('Point harus diisi dengan angka positif!', 'danger');
-        return;
-    }
-    
-    const newId = violationTypes.length > 0 ? Math.max(...violationTypes.map(t => t.id)) + 1 : 1;
-    
-    violationTypes.push({
-        id: newId,
-        name: name,
-        points: points
-    });
-    
-    saveViolationTypes();
-    renderViolationTypesTable();
-    populateViolationTypes();
-    
-    nameInput.value = '';
-    pointsInput.value = '';
-    
-    showAlert('Jenis pelanggaran berhasil ditambahkan!');
-}
-
-function deleteViolationType(id) {
-    const isUsed = violations.some(v => v.typeId === id);
-    if(isUsed) {
-        showAlert('Tidak dapat menghapus: jenis pelanggaran ini masih digunakan!', 'danger');
-        return;
-    }
-    
-    if(confirm('Yakin ingin menghapus jenis pelanggaran ini?')) {
-        violationTypes = violationTypes.filter(t => t.id !== id);
-        saveViolationTypes();
-        renderViolationTypesTable();
-        populateViolationTypes();
-        showAlert('Jenis pelanggaran berhasil dihapus!');
-    }
-}
-
-// Student search for violation
-function handleStudentSearchInput(e) {
-    const dropdown = document.getElementById('studentSearchDropdown');
-    const term = e.target.value.toLowerCase().trim();
-    
-    if (term.length < 1) { 
-        dropdown.classList.add('d-none'); 
-        return; 
-    }
-    
-    const filtered = students.filter(s => {
-        if (!s) return false;
-        const namaMatch = s.nama ? s.nama.toLowerCase().includes(term) : false;
-        const nisMatch = s.nis ? s.nis.toLowerCase().includes(term) : false;
-        return namaMatch || nisMatch;
-    });
-    
-    dropdown.innerHTML = filtered.slice(0, 5).map(s => 
-        `<div class="dropdown-item" onclick="selectStudentForViolation('${s.nis}')">
-            ${escapeHtml(s.nis)} - ${escapeHtml(s.nama)} (${escapeHtml(s.kelas || '-')})
-        </div>`
-    ).join('');
-    
-    dropdown.classList.remove('d-none');
-}
-
-function selectStudentForViolation(nis) {
-    const s = students.find(x => x.nis === nis);
-    if(s) {
-        document.getElementById('viStudentSelected').value = `${s.nis} - ${s.nama} (${s.kelas || ''})`;
-        document.getElementById('viStudentSearch').value = '';
-        document.getElementById('studentSearchDropdown').classList.add('d-none');
-    }
-}
-
-function addViolation() {
-    const nisText = document.getElementById('viStudentSelected').value;
-    if (!nisText) { 
-        showAlert('Pilih siswa terlebih dahulu!', 'danger'); 
-        return; 
-    }
-    
-    const nis = nisText.split(' - ')[0];
-    const student = students.find(s => s.nis === nis);
-    
-    const typeId = parseInt(document.getElementById('viType').value);
-    const type = violationTypes.find(t => t.id === typeId);
-    const date = document.getElementById('viDate').value;
-    const note = document.getElementById('viNote').value;
-
-    if(!student || !type || !date) { 
-        showAlert('Data tidak lengkap!', 'danger'); 
-        return; 
-    }
-
-    const newViolation = {
-        id: Date.now(),
-        studentNis: nis,
-        studentName: student.nama,
-        studentClass: student.kelas,
-        typeId: type.id,
-        typeName: type.name,
-        points: type.points,
-        date: date,
-        note: note || '-'
-    };
-    
-    violations.push(newViolation);
-    saveViolations();
-    
-    pointsMap[nis] = (pointsMap[nis] || 0) + type.points;
-    
-    renderViolationsTable();
-    renderStudentsTable();
-    
-    document.getElementById('viNote').value = '';
-    document.getElementById('viStudentSelected').value = '';
-    
-    showAlert('Pelanggaran berhasil dicatat!');
-}
-
-function renderViolationsTable() {
-    const tbody = document.querySelector('#violationsTable tbody');
-    if (!tbody) return;
-    
-    const rows = [];
-    
-    if (!violations || violations.length === 0) {
-        rows.push(`<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data pelanggaran</td></tr>`);
-    } else {
-        [...violations].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10).forEach(v => {
-            rows.push(`<tr>
-                <td>${formatDate(v.date)}</td>
-                <td>${escapeHtml(v.studentName || '')}</td>
-                <td>${escapeHtml(v.typeName || '')}</td>
-                <td>${v.points || 0}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteViolation(${v.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>`);
-        });
-    }
-    
-    tbody.innerHTML = rows.join('');
-}
-
-function deleteViolation(id) { 
-    if (confirm('Yakin ingin menghapus pelanggaran ini?')) {
-        const v = violations.find(x => x.id === id);
-        if(v) {
-            pointsMap[v.studentNis] = (pointsMap[v.studentNis] || 0) - (v.points || 0);
-            violations = violations.filter(v => v.id !== id); 
-            saveViolations(); 
-            renderViolationsTable(); 
-            renderStudentsTable();
-            showAlert('Pelanggaran berhasil dihapus!');
-        }
-    }
-}
-
-// =============================================================================
-// 7. HANDLING MANAGEMENT
-// =============================================================================
-function loadStudentHandling() { 
-    const d = localStorage.getItem('student_handling'); 
-    if(d) {
-        try { studentHandling = JSON.parse(d); } catch(e) { studentHandling = []; }
-    }
-}
-
-function saveStudentHandling() { 
-    localStorage.setItem('student_handling', JSON.stringify(studentHandling)); 
-}
-
-function previewHandlingPhoto(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-        currentHandlingPhotoData = ev.target.result;
-        document.getElementById('handlingPhotoPreview').src = ev.target.result;
-        document.getElementById('handlingPhotoPreviewContainer').style.display = 'block';
-        document.getElementById('handlingPhotoEmptyState').style.display = 'none';
-        currentHandlingPhoto = file;
-    };
-    reader.readAsDataURL(file);
-}
-
-function clearHandlingPhoto() {
-    document.getElementById('penanganan_photo').value = '';
-    document.getElementById('handlingPhotoPreviewContainer').style.display = 'none';
-    document.getElementById('handlingPhotoEmptyState').style.display = 'block';
-    currentHandlingPhoto = null;
-    currentHandlingPhotoData = null;
-}
-
-function renderPenangananSiswa() {
-    const tbody = document.querySelector('#penangananTable tbody');
-    if (!tbody) return;
-    
-    const highRisk = students.filter(s => (pointsMap[s.nis] || 0) > 200)
-        .sort((a,b) => (pointsMap[b.nis] || 0) - (pointsMap[a.nis] || 0));
-
-    if(highRisk.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Tidak ada siswa dengan poin > 200.</td></tr>';
-        return;
-    }
-
-    const rows = [];
-    highRisk.forEach((s, i) => {
-        const pts = pointsMap[s.nis] || 0;
-        const lastDate = handlingMap[s.nis];
-        const status = lastDate 
-            ? `<span class="badge bg-info">Ditangani: ${formatDate(lastDate)}</span>` 
-            : `<span class="badge bg-warning">Belum Ditangani</span>`;
-
-        rows.push(`<tr>
-            <td>${i+1}</td>
-            <td>${escapeHtml(s.nama || '')}</td>
-            <td>${escapeHtml(s.kelas || '')}</td>
-            <td><strong class="text-danger">${pts}</strong></td>
-            <td>${status}</td>
-            <td>
-                <button class="btn btn-sm btn-primary" onclick="openPenangananModal('${s.nis}')">
-                    <i class="fas fa-hand-holding-heart"></i> Penanganan
-                </button>
-            </td>
-        </tr>`);
-    });
-    tbody.innerHTML = rows.join('');
-}
-
-function openPenangananModal(nis) {
-    const s = students.find(st => st.nis === nis);
-    if(!s) return;
-
-    document.getElementById('penanganan_nis').value = nis;
-    document.getElementById('penanganan_nama').innerText = s.nama || '-';
-    document.getElementById('penanganan_total_poin').innerText = pointsMap[nis] || 0;
-    document.getElementById('penanganan_date').value = new Date().toISOString().split('T')[0];
-    
-    clearHandlingPhoto();
-    
-    const studentViolations = violations.filter(v => v.studentNis === nis);
-    const historyDiv = document.getElementById('penangananHistoryList');
-    
-    if(studentViolations.length === 0) {
-        historyDiv.innerHTML = '<p class="text-muted mb-0">Tidak ada riwayat pelanggaran.</p>';
-    } else {
-        let hHtml = `<table class="table table-bordered table-sm mb-0">
-            <thead>
-                <tr><th>Tanggal</th><th>Jenis</th><th>Poin</th></tr>
-            </thead>
-            <tbody>`;
-        
-        studentViolations.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(v => {
-            hHtml += `<tr>
-                <td>${formatDate(v.date)}</td>
-                <td>${escapeHtml(v.typeName || '')}</td>
-                <td>${v.points || 0}</td>
-            </tr>`;
-        });
-        hHtml += `</tbody></table>`;
-        historyDiv.innerHTML = hHtml;
-    }
-
-    document.getElementById('penanganan_notes').value = '';
-    document.getElementById('checkPernyataan').checked = false;
-    
-    new bootstrap.Modal(document.getElementById('penangananModal')).show();
-}
-
-function cetakBuktiPenanganan() {
-    const nis = document.getElementById('penanganan_nis').value;
-    const date = document.getElementById('penanganan_date').value;
-    const notes = document.getElementById('penanganan_notes').value;
-
-    if(!date || !notes) { 
-        showAlert('Tanggal dan Keterangan wajib diisi!', 'danger'); 
-        return; 
-    }
-
-    if (!document.getElementById('checkPernyataan').checked) {
-        showAlert('Siswa harus menyetujui pernyataan!', 'warning');
-        return;
-    }
-
-    const handlingData = { 
-        id: Date.now(), 
-        nis, 
-        date, 
-        notes,
-        photoData: currentHandlingPhotoData || null
-    };
-    
-    studentHandling.push(handlingData);
-    saveStudentHandling();
-    
-    handlingMap[nis] = date;
-    renderPenangananSiswa();
-    
-    const student = students.find(s => s.nis === nis);
-    const schoolInfo = JSON.parse(localStorage.getItem('school_info') || '{}');
-    const totalPoints = pointsMap[nis] || 0;
-    const studentViolations = violations.filter(v => v.studentNis === nis);
-
-    const photoHtml = currentHandlingPhotoData 
-        ? `<div style="margin-top: 15px;">
-            <p style="font-size:11pt;"><strong>Foto Bukti Penanganan:</strong></p>
-            <img src="${currentHandlingPhotoData}" style="max-width:100%; max-height:200px; border:1px solid #000; margin:10px 0;">
-           </div>`
-        : '';
-
-    const printContent = `
-        <div class="print-body">
-            <div class="print-header">
-                ${schoolInfo.logo ? `<img src="${schoolInfo.logo}" style="height:80px; margin-bottom:10px;">` : ''}
-                <h2 style="margin:0; font-size:16pt; text-transform:uppercase;">${escapeHtml(schoolInfo.name || 'Nama Sekolah')}</h2>
-                <p style="margin:0; font-size:10pt;">${escapeHtml(schoolInfo.address || 'Alamat')}</p>
-                <hr style="border-top:2px solid #000; margin-top:10px; margin-bottom:5px;">
-                <hr style="border-top:1px solid #000; margin-top:0; margin-bottom:15px;">
-            </div>
-            <div class="print-title">SURAT PERNYATAAN PENANGANAN</div>
-            <div style="margin-top: 20px;">
-                <table style="width:50%; font-size:11pt;">
-                    <tr><td style="width:30%">Nama</td><td>: <strong>${escapeHtml(student.nama || '')}</strong></td></tr>
-                    <tr><td>Kelas</td><td>: ${escapeHtml(student.kelas || '')}</td></tr>
-                    <tr><td>Orang Tua</td><td>: ${escapeHtml(student.ortu || '-')}</td></tr>
-                </table>
-            </div>
-            <div style="margin-top: 15px;">
-                <p style="font-size:11pt;"><strong>Rekapitulasi Pelanggaran:</strong></p>
-                <table class="print-table">
-                    <thead>
-                        <tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Poin</th></tr>
-                    </thead>
-                    <tbody>
-                        ${studentViolations.map((v, i) => `
-                            <tr>
-                                <td style="text-align:center;">${i+1}</td>
-                                <td>${formatDate(v.date)}</td>
-                                <td>${escapeHtml(v.typeName || '')}</td>
-                                <td style="text-align:center;">${v.points || 0}</td>
-                            </tr>
-                        `).join('')}
-                        <tr style="background:#f0f0f0;">
-                            <td colspan="3" style="text-align:right; font-weight:bold;">Total</td>
-                            <td style="text-align:center; font-weight:bold;">${totalPoints}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div style="margin-top: 15px;">
-                <p style="font-size:11pt;"><strong>Tindakan:</strong></p>
-                <div style="border:1px solid #ccc; padding:10px;">${escapeHtml(notes)}</div>
-            </div>
-            ${photoHtml}
-            <div class="pledge-box">
-                <p style="margin:0; font-weight:bold; text-align:center;">PERJANJIAN SISWA</p>
-                <p style="margin:10px 0 0 0; text-align:justify; font-size:11pt;">
-                    Saya, <strong>${escapeHtml(student.nama || '')}</strong>, berjanji tidak akan mengulangi pelanggaran.
-                </p>
-            </div>
-            <div style="margin-top: 30px; text-align: right; font-size: 11pt;">
-                ${escapeHtml(schoolInfo.address || 'Tempat')}, ${formatDate(date)}
-            </div>
-            <div class="signature-row">
-                <div class="signature-item">
-                    <p style="font-weight:bold;">Kepala Sekolah</p>
-                    <div class="signature-space"></div>
-                    <p>${escapeHtml(schoolInfo.kepala || '...........')}</p>
-                </div>
-                <div class="signature-item">
-                    <p style="font-weight:bold;">Orang Tua</p>
-                    <div class="signature-space"></div>
-                    <p>${escapeHtml(student.ortu || '...........')}</p>
-                </div>
-                <div class="signature-item">
-                    <p style="font-weight:bold;">Siswa</p>
-                    <div class="signature-space"></div>
-                    <p>${escapeHtml(student.nama || '')}</p>
-                </div>
-            </div>
-        </div>
-    `;
-
-    const win = window.open('', '_blank');
-    win.document.write(`<html>
-        <head>
-            <title>Cetak Surat Penanganan</title>
-            <style>
-                body { font-family: 'Times New Roman', serif; line-height: 1.5; margin: 0; }
-                .print-body { padding: 20mm; }
-                .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
-                .print-title { text-transform: uppercase; font-weight: bold; font-size: 14pt; margin-top: 15px; text-decoration: underline; text-align: center; }
-                .print-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11pt; }
-                .print-table th, .print-table td { border: 1px solid #000; padding: 5px 10px; text-align: left; }
-                .print-table th { background-color: #f0f0f0; text-align: center; }
-                .signature-row { display: flex; justify-content: space-between; margin-top: 60px; width: 100%; }
-                .signature-item { width: 30%; text-align: center; }
-                .signature-space { height: 60px; }
-                .pledge-box { border: 2px solid #000; padding: 15px; margin: 20px 0; background-color: #f9f9f9; }
-                @media print { body { margin: 0; } }
-            </style>
-        </head>
-        <body>${printContent}
-            <script>
-                window.onload = function() { 
-                    setTimeout(function() { window.print(); }, 500);
-                }
-            <\/script>
-        </body>
-    </html>`);
-    win.document.close();
-    
-    clearHandlingPhoto();
-    bootstrap.Modal.getInstance(document.getElementById('penangananModal')).hide();
-    showAlert('Data penanganan berhasil disimpan!');
-}
-
-// =============================================================================
-// 8. REKAP PELANGGARAN - PERBAIKAN
-// =============================================================================
-function handleRekapTypeChange() {
-    const rekapType = document.getElementById('rekapType').value;
-    const siswaContainer = document.getElementById('rekapSiswaContainer');
-    const btnExport = document.getElementById('btnExportRekap');
-    
-    if (rekapType === 'per-siswa') {
-        siswaContainer.classList.remove('d-none');
-        if (btnExport) btnExport.style.display = 'none';
-    } else {
-        siswaContainer.classList.add('d-none');
-        if (btnExport) btnExport.style.display = 'inline-block';
-    }
-}
-
-function handleRekapSiswaSearchInput(e) { 
-    handleGenericSearch(e, 'rekapSiswaSearchDropdown', 'selectRekapSiswa'); 
-}
-
-function selectRekapSiswa(nis) {
-    const s = students.find(x => x.nis === nis);
-    if(s) {
-        document.getElementById('rekapSiswaSearch').value = `${s.nis} - ${s.nama} (${s.kelas || ''})`;
-    }
-    document.getElementById('rekapSiswaSearchDropdown').classList.add('d-none');
-}
-
-function tampilkanRekap() {
-    const type = document.getElementById('rekapType').value;
-    const area = document.getElementById('rekapArea');
-    const btnExport = document.getElementById('btnExportRekap');
-    
-    if (type === 'per-siswa') {
-        // PERBAIKAN: Rekap per siswa
-        const term = document.getElementById('rekapSiswaSearch').value;
-        if (!term) {
-            area.innerHTML = '<p class="text-warning">Silakan pilih siswa terlebih dahulu!</p>';
-            return;
-        }
-        
-        const nis = term.split(' - ')[0];
-        const s = students.find(x => x.nis === nis);
-        
-        if(!s) { 
-            area.innerHTML = '<p class="text-danger">Siswa tidak ditemukan!</p>'; 
-            return; 
-        }
-        
-        const sv = violations.filter(v => v.studentNis === nis);
-        const total = pointsMap[nis] || 0;
-        
-        if (sv.length === 0) {
-            area.innerHTML = `<h5>${escapeHtml(s.nama)}</h5>
-                <p>Total Poin: <strong>${total}</strong></p>
-                <div class="alert alert-info">Tidak ada riwayat pelanggaran.</div>`;
-        } else {
-            let tableHtml = `<h5>${escapeHtml(s.nama)} (${escapeHtml(s.kelas || '-')})</h5>
-                <p>Total Poin: <strong class="text-danger">${total}</strong></p>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>No</th>
-                                <th>Tanggal</th>
-                                <th>Jenis Pelanggaran</th>
-                                <th>Poin</th>
-                                <th>Keterangan</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-            
-            sv.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach((v, i) => {
-                tableHtml += `<tr>
-                    <td>${i+1}</td>
-                    <td>${formatDate(v.date)}</td>
-                    <td>${escapeHtml(v.typeName || '')}</td>
-                    <td class="text-center">${v.points || 0}</td>
-                    <td>${escapeHtml(v.note || '-')}</td>
-                </tr>`;
-            });
-            
-            tableHtml += `</tbody></table></div>`;
-            area.innerHTML = tableHtml;
-        }
-        
-        if (btnExport) btnExport.style.display = 'none';
-        
-    } else {
-        // PERBAIKAN: Rekap semua pelanggaran
-        if (!violations || violations.length === 0) {
-            area.innerHTML = '<div class="alert alert-info">Belum ada data pelanggaran.</div>';
-            return;
-        }
-        
-        let totalPoin = 0;
-        violations.forEach(v => totalPoin += v.points || 0);
-        
-        // Hitung statistik
-        const uniqueStudents = [...new Set(violations.map(v => v.studentNis))].length;
-        const totalViolations = violations.length;
-        const avgPoin = totalViolations > 0 ? (totalPoin / totalViolations).toFixed(1) : 0;
-        
-        // Kelompokkan per jenis pelanggaran
-        const typeStats = {};
-        violations.forEach(v => {
-            if (v.typeName) {
-                if (!typeStats[v.typeName]) {
-                    typeStats[v.typeName] = { count: 0, points: 0 };
-                }
-                typeStats[v.typeName].count++;
-                typeStats[v.typeName].points += v.points || 0;
-            }
-        });
-        
-        let typeStatsHtml = '';
-        Object.keys(typeStats).sort().forEach(type => {
-            typeStatsHtml += `<tr>
-                <td>${escapeHtml(type)}</td>
-                <td class="text-center">${typeStats[type].count}</td>
-                <td class="text-center">${typeStats[type].points}</td>
-            </tr>`;
-        });
-        
-        // Kelompokkan per bulan
-        const monthlyStats = {};
-        violations.forEach(v => {
-            if (v.date) {
-                const monthYear = formatDate(v.date).substring(3); // Ambil bulan dan tahun
-                if (!monthlyStats[monthYear]) {
-                    monthlyStats[monthYear] = 0;
-                }
-                monthlyStats[monthYear] += v.points || 0;
-            }
-        });
-        
-        let monthlyStatsHtml = '';
-        Object.keys(monthlyStats).sort((a,b) => {
-            // Urutkan berdasarkan tanggal
-            const dateA = new Date(a.split('/').reverse().join('-'));
-            const dateB = new Date(b.split('/').reverse().join('-'));
-            return dateB - dateA;
-        }).slice(0, 5).forEach(month => {
-            monthlyStatsHtml += `<tr>
-                <td>${month}</td>
-                <td class="text-center">${monthlyStats[month]}</td>
-            </tr>`;
-        });
-        
-        area.innerHTML = `<div class="row">
-            <div class="col-md-12 mb-3">
-                <div class="row">
-                    <div class="col-md-3 col-sm-6 mb-2">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body p-2 text-center">
-                                <h6 class="mb-0">Total Pelanggaran</h6>
-                                <h3 class="mt-1 mb-0">${totalViolations}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-2">
-                        <div class="card bg-success text-white">
-                            <div class="card-body p-2 text-center">
-                                <h6 class="mb-0">Total Poin</h6>
-                                <h3 class="mt-1 mb-0">${totalPoin}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-2">
-                        <div class="card bg-info text-white">
-                            <div class="card-body p-2 text-center">
-                                <h6 class="mb-0">Siswa Terlibat</h6>
-                                <h3 class="mt-1 mb-0">${uniqueStudents}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 col-sm-6 mb-2">
-                        <div class="card bg-warning text-white">
-                            <div class="card-body p-2 text-center">
-                                <h6 class="mb-0">Rata-rata Poin</h6>
-                                <h3 class="mt-1 mb-0">${avgPoin}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">Rekapitulasi per Jenis Pelanggaran</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Jenis Pelanggaran</th>
-                                    <th class="text-center">Jumlah</th>
-                                    <th class="text-center">Total Poin</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${typeStatsHtml || '<tr><td colspan="3" class="text-center text-muted">Tidak ada data</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">Tren Poin per Bulan (5 Bulan Terakhir)</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Periode</th>
-                                    <th class="text-center">Total Poin</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${monthlyStatsHtml || '<tr><td colspan="2" class="text-center text-muted">Tidak ada data</td></tr>'}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-12 mt-3">
-                <div class="card">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">10 Pelanggaran Terbaru</h6>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Tanggal</th>
-                                    <th>NIS</th>
-                                    <th>Nama</th>
-                                    <th>Kelas</th>
-                                    <th>Jenis</th>
-                                    <th>Poin</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${[...violations].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10).map(v => `
-                                    <tr>
-                                        <td>${formatDate(v.date)}</td>
-                                        <td>${escapeHtml(v.studentNis || '')}</td>
-                                        <td>${escapeHtml(v.studentName || '')}</td>
-                                        <td>${escapeHtml(v.studentClass || '')}</td>
-                                        <td>${escapeHtml(v.typeName || '')}</td>
-                                        <td class="text-center">${v.points || 0}</td>
-                                    </tr>
-                                `).join('')}
-                                ${violations.length === 0 ? '<tr><td colspan="6" class="text-center text-muted">Tidak ada data</td></tr>' : ''}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-        
-        if (btnExport) btnExport.style.display = 'inline-block';
-    }
-}
-
-// Fungsi export rekap ke Excel
-function exportRekapExcel() {
-    if (!violations || violations.length === 0) {
-        showAlert('Tidak ada data untuk diexport!', 'warning');
-        return;
-    }
-    
-    try {
-        let csv = "Tanggal,NIS,Nama,Kelas,Jenis Pelanggaran,Poin,Keterangan\n";
-        
-        violations.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(v => {
-            csv += `${formatDate(v.date)},${v.studentNis || ''},${v.studentName || ''},${v.studentClass || ''},${v.typeName || ''},${v.points || 0},${v.note || ''}\n`;
-        });
-        
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `rekap_pelanggaran_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        
-        showAlert('Data berhasil diexport!');
-    } catch(e) {
-        showAlert('Gagal export data: ' + e.message, 'danger');
-    }
-}
-
-// =============================================================================
-// 9. RANKING PELANGGARAN - PERBAIKAN
-// =============================================================================
-function populateClassDropdown() {
-    const kelasList = [...new Set(students.map(s => s.kelas).filter(k => k && k.trim()))].sort();
-    const options = '<option value="">Semua Kelas</option>' + 
-        kelasList.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-    document.getElementById('rankingKelas').innerHTML = options;
-}
-
-function handleRankingPeriodChange() {
-    const period = document.getElementById('rankingPeriod').value;
-    const customFields = document.getElementById('rankingCustomFields');
-    
-    if (period === 'custom') {
-        customFields.style.display = 'block';
-        // Set default tahun
-        const currentYear = new Date().getFullYear();
-        document.getElementById('rankingStartYear').value = currentYear;
-        document.getElementById('rankingEndYear').value = currentYear;
-    } else {
-        customFields.style.display = 'none';
-    }
-}
-
-function tampilkanRankingSiswa() {
-    const tbody = document.querySelector('#rankingSiswaTable tbody');
-    if (!tbody) return;
-    
-    const kelasFilter = document.getElementById('rankingKelas').value;
-    const period = document.getElementById('rankingPeriod').value;
-    
-    // PERBAIKAN: Filter berdasarkan periode
-    let filteredViolations = [...violations];
-    
-    if (period === 'custom') {
-        const startYear = parseInt(document.getElementById('rankingStartYear').value);
-        const endYear = parseInt(document.getElementById('rankingEndYear').value);
-        
-        if (!isNaN(startYear) && !isNaN(endYear)) {
-            filteredViolations = filteredViolations.filter(v => {
-                if (!v.date) return false;
-                try {
-                    const year = new Date(v.date).getFullYear();
-                    return year >= startYear && year <= endYear;
-                } catch(e) {
-                    return false;
-                }
-            });
-        }
-    } else if (period === 'tahunan') {
-        const currentYear = new Date().getFullYear();
-        filteredViolations = filteredViolations.filter(v => {
-            if (!v.date) return false;
-            try {
-                return new Date(v.date).getFullYear() === currentYear;
-            } catch(e) {
-                return false;
-            }
-        });
-    }
-    
-    // Hitung poin per siswa berdasarkan filtered violations
-    const rankingPoints = {};
-    filteredViolations.forEach(v => {
-        if (v && v.studentNis) {
-            rankingPoints[v.studentNis] = (rankingPoints[v.studentNis] || 0) + (v.points || 0);
-        }
-    });
-    
-    // Filter siswa berdasarkan kelas
-    let eligibleStudents = students;
-    if (kelasFilter) {
-        eligibleStudents = students.filter(s => s.kelas === kelasFilter);
-    }
-    
-    // Siapkan data ranking
-    const rankingData = [];
-    eligibleStudents.forEach(s => {
-        const pts = rankingPoints[s.nis] || 0;
-        if (pts > 0) {
-            rankingData.push({
-                nis: s.nis,
-                nama: s.nama,
-                kelas: s.kelas,
-                poin: pts
-            });
-        }
-    });
-    
-    // Urutkan berdasarkan poin (descending)
-    rankingData.sort((a, b) => b.poin - a.poin);
-    
-    // Tampilkan data
-    const rows = [];
-    
-    if (rankingData.length === 0) {
-        rows.push(`<tr><td colspan="6" class="text-center text-muted py-4">Tidak ada data ranking untuk periode ini</td></tr>`);
-    } else {
-        rankingData.forEach((item, index) => {
-            const medalIcon = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '';
-            rows.push(`<tr>
-                <td class="text-center"><strong>${index+1}</strong> ${medalIcon}</td>
-                <td>${escapeHtml(item.nis || '')}</td>
-                <td>${escapeHtml(item.nama || '')}</td>
-                <td>${escapeHtml(item.kelas || '')}</td>
-                <td class="text-center"><span class="badge bg-danger">${item.poin}</span></td>
-                <td class="text-center">
-                    <button class="btn btn-sm btn-outline-info" onclick="showDetailPelanggaran('${item.nis}')">
-                        <i class="fas fa-list"></i> Detail
-                    </button>
-                </td>
-            </tr>`);
-        });
-    }
-    
-    tbody.innerHTML = rows.join('');
-}
-
-// Fungsi export ranking ke Excel
-function exportRankingExcel() {
-    const tbody = document.querySelector('#rankingSiswaTable tbody');
-    if (!tbody) return;
-    
-    const rows = tbody.querySelectorAll('tr');
-    if (rows.length === 0 || (rows.length === 1 && rows[0].querySelector('td')?.colSpan === 6)) {
-        showAlert('Tidak ada data untuk diexport!', 'warning');
-        return;
-    }
-    
-    try {
-        let csv = "Rank,NIS,Nama,Kelas,Total Poin\n";
-        
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length >= 5 && !cells[0].colSpan) {
-                const rank = cells[0]?.innerText?.trim()?.replace(/[🥇🥈🥉]/g, '') || '';
-                const nis = cells[1]?.innerText || '';
-                const nama = cells[2]?.innerText || '';
-                const kelas = cells[3]?.innerText || '';
-                const poin = cells[4]?.innerText?.replace(/[^0-9]/g, '') || '0';
-                
-                csv += `${rank},${nis},${nama},${kelas},${poin}\n`;
-            }
-        });
-        
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `ranking_pelanggaran_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        
-        showAlert('Data ranking berhasil diexport!');
-    } catch(e) {
-        showAlert('Gagal export data: ' + e.message, 'danger');
-    }
-}
-
-// =============================================================================
-// 10. DETAIL PELANGGARAN
-// =============================================================================
-function showDetailPelanggaran(nis) {
-    const s = students.find(x => x.nis === nis);
-    const sv = violations.filter(v => v.studentNis === nis);
-    const total = pointsMap[nis] || 0;
-    
-    let content = `<div class="container-fluid">
-        <div class="row mb-3">
-            <div class="col-12">
-                <h5>${escapeHtml(s?.nama || 'Siswa')}</h5>
-                <p class="mb-1">NIS: ${escapeHtml(s?.nis || '')}</p>
-                <p class="mb-1">Kelas: ${escapeHtml(s?.kelas || '')}</p>
-                <p class="mb-0">Total Poin: <strong class="text-danger">${total}</strong></p>
-            </div>
-        </div>`;
-    
-    if (sv.length === 0) {
-        content += `<div class="alert alert-info">Tidak ada riwayat pelanggaran.</div>`;
-    } else {
-        content += `<div class="row">
-            <div class="col-12">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>No</th>
-                                <th>Tanggal</th>
-                                <th>Jenis Pelanggaran</th>
-                                <th>Poin</th>
-                                <th>Keterangan</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-        
-        sv.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach((v, i) => {
-            content += `<tr>
-                <td class="text-center">${i+1}</td>
-                <td>${formatDate(v.date)}</td>
-                <td>${escapeHtml(v.typeName || '')}</td>
-                <td class="text-center">${v.points || 0}</td>
-                <td>${escapeHtml(v.note || '-')}</td>
-            </tr>`;
-        });
-        
-        content += `</tbody></table></div></div></div>`;
-    }
-    
-    content += `</div>`;
-    
-    document.getElementById('detailPelanggaranContent').innerHTML = content;
-    new bootstrap.Modal(document.getElementById('detailPelanggaranModal')).show();
-}
-
-// =============================================================================
-// 11. LAPORAN TREN
-// =============================================================================
-function handleLaporanTypeChange() {
-    const laporanType = document.getElementById('laporanType').value;
-    const siswaContainer = document.getElementById('laporanSiswaContainer');
-    
-    if (laporanType === 'per-siswa') {
-        siswaContainer.classList.remove('d-none');
-    } else {
-        siswaContainer.classList.add('d-none');
-    }
-}
-
-function handleLaporanSiswaSearchInput(e) { 
-    handleGenericSearch(e, 'laporanSiswaSearchDropdown', 'selectLaporanSiswa'); 
-}
-
-function selectLaporanSiswa(nis) {
-    const s = students.find(x => x.nis === nis);
-    if(s) {
-        document.getElementById('laporanSiswaSearch').value = `${s.nis} - ${s.nama} (${s.kelas || ''})`;
-    }
-    document.getElementById('laporanSiswaSearchDropdown').classList.add('d-none');
-    tampilkanLaporanDanGrafik();
-}
-
-function tampilkanLaporanDanGrafik() {
-    const ctx = document.getElementById('trendChart').getContext('2d');
-    const laporanType = document.getElementById('laporanType').value;
-    
-    // Siapkan data untuk chart
-    const monthlyData = {};
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
-    
-    // Inisialisasi data 12 bulan
-    for (let i = 0; i < 12; i++) {
-        monthlyData[monthNames[i]] = 0;
-    }
-    
-    let filteredViolations = [...violations];
-    let chartLabel = 'Semua Kelas';
-    
-    if (laporanType === 'per-siswa') {
-        const term = document.getElementById('laporanSiswaSearch').value;
-        if (!term) {
-            showAlert('Pilih siswa terlebih dahulu!', 'warning');
-            return;
-        }
-        
-        const nis = term.split(' - ')[0];
-        const s = students.find(x => x.nis === nis);
-        if (s) {
-            chartLabel = s.nama;
-            filteredViolations = violations.filter(v => v.studentNis === nis);
-        }
-    }
-    
-    // Hitung per bulan
-    filteredViolations.forEach(v => {
-        if (v.date) {
-            try {
-                const date = new Date(v.date);
-                const month = monthNames[date.getMonth()];
-                if (monthlyData[month] !== undefined) {
-                    monthlyData[month] += v.points || 0;
-                }
-            } catch(e) {}
-        }
-    });
-    
-    // Siapkan dataset
-    const labels = Object.keys(monthlyData);
-    const data = Object.values(monthlyData);
-    
-    if (trendChartInstance) {
-        trendChartInstance.destroy();
-    }
-    
-    trendChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: { 
-            labels: labels, 
-            datasets: [{ 
-                label: `Total Poin - ${chartLabel}`, 
-                data: data, 
-                borderColor: 'rgb(13, 110, 253)', 
-                backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                tension: 0.1,
-                fill: true
-            }] 
-        },
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Total Poin: ${context.raw}`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Total Poin'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// =============================================================================
-// 12. GENERIC SEARCH
-// =============================================================================
-function handleGenericSearch(e, dropdownId, callbackName) {
-    const dropdown = document.getElementById(dropdownId);
-    if (!dropdown) return;
-    
-    const term = e.target.value.toLowerCase().trim();
-    
-    if (term.length < 1) { 
-        dropdown.classList.add('d-none'); 
-        return; 
-    }
-    
-    const filtered = students.filter(s => {
-        if (!s) return false;
-        const namaMatch = s.nama ? s.nama.toLowerCase().includes(term) : false;
-        const nisMatch = s.nis ? s.nis.toLowerCase().includes(term) : false;
-        return namaMatch || nisMatch;
-    });
-    
-    dropdown.innerHTML = filtered.slice(0, 5).map(s => 
-        `<div class="dropdown-item" onclick="${callbackName}('${s.nis}')">
-            ${escapeHtml(s.nis)} - ${escapeHtml(s.nama)} (${escapeHtml(s.kelas || '-')})
-        </div>`
-    ).join('');
-    
-    dropdown.classList.remove('d-none');
-}
-
-// =============================================================================
-// 13. NAVIGATION & UTILITIES
-// =============================================================================
-const sidebar = document.getElementById('sidebar');
-document.getElementById('btnToggle').addEventListener('click', function() {
-    sidebar.classList.toggle('collapsed');
-});
-
-function showPage(key) {
-    document.querySelectorAll('.page').forEach(p => p.classList.add('d-none'));
-    document.getElementById('page_' + key).classList.remove('d-none');
-    
-    const titles = { 
-        identitas: 'Identitas Sekolah', 
-        data_siswa: 'Data Siswa', 
-        pelanggaran: 'Pencatatan Pelanggaran', 
-        rekap_pelanggaran: 'Rekap Pelanggaran', 
-        penanganan_siswa: 'Penanganan Siswa', 
-        laporan_ranking: 'Laporan Ranking', 
-        laporan_tren: 'Laporan Tren', 
-        pengaturan: 'Pengaturan' 
-    };
-    
-    document.getElementById('pageTitle').textContent = titles[key] || 'Menu';
-    
-    if (window.innerWidth < 992) {
-        sidebar.classList.add('collapsed');
-    }
-    
-    // Render konten sesuai halaman
-    if (key === 'data_siswa') {
-        renderStudentsTable();
-    }
-    
-    if (key === 'pelanggaran') { 
-        populateViolationTypes(); 
-        renderViolationsTable(); 
-        document.getElementById('viDate').value = new Date().toISOString().split('T')[0]; 
-    }
-    
-    if (key === 'penanganan_siswa') {
-        renderPenangananSiswa();
-    }
-    
-    if (key === 'rekap_pelanggaran') {
-        handleRekapTypeChange();
-        tampilkanRekap();
-    }
-    
-    if (key === 'laporan_ranking') {
-        populateClassDropdown();
-        handleRankingPeriodChange();
-        tampilkanRankingSiswa();
-    }
-    
-    if (key === 'laporan_tren') {
-        handleLaporanTypeChange();
-        tampilkanLaporanDanGrafik();
-    }
-    
-    if (key === 'pengaturan') {
-        renderViolationTypesTable();
-    }
-}
-
-function toggleLaporanSubmenu(e) { 
-    e.preventDefault(); 
-    const m = document.getElementById('laporanSubmenu'); 
-    m.style.display = m.style.display === 'none' ? 'block' : 'none'; 
-}
-
-function exportJSON() { 
-    const data = {
-        students: students,
-        violations: violations,
-        studentHandling: studentHandling,
-        violationTypes: violationTypes
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a'); 
-    a.href = URL.createObjectURL(blob); 
-    a.download = `backup_${new Date().toISOString().split('T')[0]}.json`; 
-    a.click();
-    showAlert('Backup berhasil dibuat!');
-}
-
-function handleImportJSON(e) {
-    const f = e.target.files[0]; 
-    if(!f) return;
-    
-    const r = new FileReader();
-    r.onload = function(ev) {
-        try {
-            const d = JSON.parse(ev.target.result);
-            
-            if (d.students) { 
-                students = d.students; 
-                saveStudents(); 
-            }
-            
-            if (d.violations) { 
-                violations = d.violations; 
-                saveViolations(); 
-            }
-            
-            if (d.studentHandling) { 
-                studentHandling = d.studentHandling; 
-                saveStudentHandling(); 
-            }
-            
-            if (d.violationTypes) { 
-                violationTypes = d.violationTypes; 
-                saveViolationTypes(); 
-            }
-            
-            recalculateCaches();
-            renderViolationTypesTable();
-            populateViolationTypes();
-            showAlert('Data restore berhasil!');
-            showPage('identitas');
-        } catch(err) { 
-            showAlert('File tidak valid: ' + err.message, 'danger'); 
-        }
-    };
-    r.readAsText(f);
-    
-    // Reset input file
-    e.target.value = '';
-}
-
-function resetAll() { 
-    if (confirm('Yakin ingin menghapus semua data?\nData yang telah dihapus tidak dapat dikembalikan!')) { 
-        localStorage.clear(); 
-        showAlert('Semua data berhasil direset!');
-        location.reload(); 
-    } 
-}
-
-// Fungsi handleUploadXLSX (placeholder untuk import Excel)
-function handleUploadXLSX(e) {
-    const f = e.target.files[0];
-    if (!f) return;
-    
-    showAlert('Fitur import Excel sedang dalam pengembangan', 'info');
-    e.target.value = '';
-}
-
-// =============================================================================
-// 14. INITIALIZATION
-// =============================================================================
-document.addEventListener('DOMContentLoaded', function() {
-    loadSchoolInfo();
-    loadStudents();
-    loadViolations();
-    loadStudentHandling();
-    loadViolationTypes();
-    
-    recalculateCaches();
-    
-    showPage('identitas');
-});
+loadData();
+loadSchoolInfo();
+document.getElementById('btnToggle')?.addEventListener('click', () => document.getElementById('sidebar').classList.toggle('collapsed'));
+showPage('identitas');
 </script>
 </body>
 </html>
